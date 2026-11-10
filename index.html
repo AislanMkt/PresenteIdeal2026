@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR" xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -126,14 +126,6 @@ dialog::backdrop{background:rgba(10,20,18,.45)}
 @media (max-width:640px){.kpi{border-right:0;border-bottom:1px solid var(--line)}.stamp{text-align:left}}
 @media (prefers-reduced-motion:no-preference){.pipe span{transition:flex-basis .4s ease}}
 </style>
-
-<!--[if gte mso 9]><xml>
-<mso:CustomDocumentProperties>
-<mso:_dlc_DocId msdt:dt="string">4YX743PNWPKN-835332818-1425002</mso:_dlc_DocId>
-<mso:_dlc_DocIdItemGuid msdt:dt="string">0017fd6c-8594-4468-8ce2-160fc94f89e2</mso:_dlc_DocIdItemGuid>
-<mso:_dlc_DocIdUrl msdt:dt="string">https://nexto.sharepoint.com/sites/AtlasGov/_layouts/15/DocIdRedir.aspx?ID=4YX743PNWPKN-835332818-1425002, 4YX743PNWPKN-835332818-1425002</mso:_dlc_DocIdUrl>
-</mso:CustomDocumentProperties>
-</xml><![endif]-->
 </head>
 <body>
 <div class="wrap">
@@ -162,7 +154,7 @@ dialog::backdrop{background:rgba(10,20,18,.45)}
       <h2>Todos os volumes</h2>
       <p class="lead">Uma linha por garrafa ou caixa. Cruza o que foi enviado nos lotes com o último status informado pela Jadlog.</p>
       <div class="filters">
-        <input type="search" id="fBusca" placeholder="Buscar nome, código, cidade" aria-label="Buscar">
+        <input type="search" id="fBusca" placeholder="Buscar nome, empresa, código, cidade" aria-label="Buscar">
         <select id="fLote" aria-label="Filtrar por lote"></select>
         <select id="fStatus" aria-label="Filtrar por status"></select>
       </div>
@@ -283,6 +275,12 @@ function normStatus(s){
   if(n.includes('TRANSFER')) return 'TRANSFERIDO';
   if(n.includes('ENTRADA')) return 'ENTRADA';
   return 'OUTRO';
+}
+// Regra do nome: "Nome do destinatário - Empresa" (separa no primeiro " - " com espaços)
+function splitNome(s){
+  const t = String(s ?? '').trim();
+  const m = t.match(/^(.*?)\s+[-–—]\s+(.+)$/);
+  return m ? {pessoa:m[1].trim(), empresa:m[2].trim()} : {pessoa:t, empresa:''};
 }
 const pad = n => String(n).padStart(2,'0');
 function toBR(d){ return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear(); }
@@ -432,7 +430,7 @@ function compute(){
 
   // 2. Volumes dos lotes
   const lines = [];
-  for(const l of state.lotes) l.linhas.forEach((x,i) => lines.push(Object.assign({key:l.id+':'+i, lote:l, f:feat(x.nome), envDate:parseISO(l.dataEnvio)}, x)));
+  for(const l of state.lotes) l.linhas.forEach((x,i) => lines.push(Object.assign({key:l.id+':'+i, lote:l, f:feat(x.nome), envDate:parseISO(l.dataEnvio)}, x, splitNome(x.nome))));
   const lineByKey = new Map(lines.map(x => [x.key, x]));
   const lineCode = new Map(), codeLine = new Map();
   const link = (c,l,s,manual) => { lineCode.set(l.key,c); codeLine.set(c.codigo,l); c.score = s; c.manual = !!manual; };
@@ -596,7 +594,7 @@ function evoSVG(evo){
 
 /* ---------- Pendências ---------- */
 function rowName(r){
-  if(r.line) return `<strong>${esc(r.line.nome)}</strong>${r.nomeDif ? `<br><span class="sub">Jadlog: ${esc(r.code.dest)}</span>` : ''}`;
+  if(r.line) return `<strong>${esc(r.line.pessoa)}</strong>${r.line.empresa ? `<br><span class="sub">${esc(r.line.empresa)}</span>` : ''}${r.nomeDif ? `<br><span class="sub">Na Jadlog: ${esc(r.code.dest)}</span>` : ''}`;
   return `<strong>${esc(r.code.dest || '(sem nome)')}</strong><br><span class="sub">não ligado a um lote</span>`;
 }
 const place = r => r.line ? `${esc(r.line.cidade)}${r.line.uf ? '/'+esc(r.line.uf) : ''}` : '—';
@@ -729,10 +727,12 @@ async function importLote(file){
     const prev = new Set(); state.lotes.forEach(l => l.linhas.forEach(x => prev.add(norm(x.nome))));
     const rep = [...new Set(linhas.map(x => norm(x.nome)).filter(n => prev.has(n)))];
     const semCep = linhas.filter(x => x.cep.length !== 8).length;
+    const semEmp = linhas.filter(x => !splitNome(x.nome).empresa).length;
     state.lotes.push(lote); save(); nomeIn.value = '';
     let t = `<strong>${esc(lote.nome)}</strong> importado: ${linhas.length} volume(s).`;
     if(rep.length) t += `<br>${rep.length} nome(s) já aparecem em lotes anteriores. Confira se não é envio repetido: ${esc(rep.slice(0,5).join(', '))}${rep.length>5?'…':''}`;
     if(semCep) t += `<br>${semCep} linha(s) com CEP fora de 8 dígitos.`;
+    if(semEmp) t += `<br>${semEmp} linha(s) sem empresa no nome (regra: “Nome - Empresa”).`;
     msg('loteMsg', t, true);
     rerender();
   } catch(e){ msg('loteMsg', esc(e.message), false); }
@@ -759,18 +759,18 @@ async function importReport(file){
 function download(name, blob){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
 function exportConsolidado(){
   if(!D.rows.length){ msg('bkMsg','Não há dados para exportar ainda.', false); return; }
-  const head = ['Lote','Enviado em','Destinatário (lote)','Endereço','Número','Complemento','Bairro','CEP','Cidade','UF','Código Jadlog','Nota fiscal','Destinatário (Jadlog)','Status','Status original','Dt emissão','Previsão','Previsão vencida','Descrição','Último relatório','Acareação','Anotações da acareação'];
+  const head = ['Lote','Enviado em','Destinatário','Empresa','Nome na etiqueta','Endereço','Número','Complemento','Bairro','CEP','Cidade','UF','Código Jadlog','Nota fiscal','Destinatário (Jadlog)','Status','Status original','Dt emissão','Previsão','Previsão vencida','Descrição','Último relatório','Acareação','Anotações da acareação'];
   const aoa = [head];
   for(const r of D.rows){
     const l = r.line || {}, c = r.code || {};
-    aoa.push([r.line ? l.lote.nome : '', r.line ? isoToBR(l.lote.dataEnvio) : '', l.nome||'', l.endereco||'', l.numero||'', l.complemento||'', l.bairro||'', l.cep||'', l.cidade||'', l.uf||'',
+    aoa.push([r.line ? l.lote.nome : '', r.line ? isoToBR(l.lote.dataEnvio) : '', l.pessoa||'', l.empresa||'', l.nome||'', l.endereco||'', l.numero||'', l.complemento||'', l.bairro||'', l.cep||'', l.cidade||'', l.uf||'',
       c.codigo||'', c.nf||'', c.dest||'', STATUS[r.st].label, c.status||'', c.emissao||'', c.previsao||'', r.atrasado?'sim':'', c.descricao||'', c.dataRef?isoToBR(c.dataRef):'',
       r.acar ? r.acar.status : '', r.acar ? r.acar.nota : '']);
   }
   const fname = 'presente-ideal-2026-consolidado-' + todayISO();
   if(typeof XLSX !== 'undefined'){
     const ws = XLSX.utils.aoa_to_sheet(aoa);
-    ws['!cols'] = head.map((h,i) => ({wch: [2,10,12,18].includes(i) ? 32 : 16}));
+    ws['!cols'] = head.map((h,i) => ({wch: [2,3,4,5,14,20].includes(i) ? 30 : 16}));
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Volumes');
     XLSX.writeFile(wb, fname + '.xlsx');
   } else {
@@ -786,7 +786,7 @@ function openAcar(cod){
   dlgCode = cod;
   const a = state.acareacoes[cod];
   document.getElementById('dlgTitle').textContent = a ? 'Acareação' : 'Abrir acareação';
-  document.getElementById('dlgInfo').textContent = `${r.line ? r.line.nome : r.code.dest} · código ${cod} · Jadlog: ${STATUS[r.st].label}${r.code.dest ? ' · nome na Jadlog: ' + r.code.dest : ''}`;
+  document.getElementById('dlgInfo').textContent = `${r.line ? r.line.pessoa + (r.line.empresa ? ' (' + r.line.empresa + ')' : '') : r.code.dest} · código ${cod} · Jadlog: ${STATUS[r.st].label}${r.code.dest ? ' · nome na Jadlog: ' + r.code.dest : ''}`;
   document.getElementById('dlgStatus').value = a ? a.status : 'aberta';
   document.getElementById('dlgNota').value = a ? a.nota : '';
   document.getElementById('dlgDel').hidden = !a;
@@ -798,15 +798,15 @@ function closeDlg(){ const d = document.getElementById('dlg'); d.close ? d.close
 function loadDemo(){
   const L = (nome,end,num,comp,bairro,cep,cidade,uf) => ({nome,endereco:end,numero:num,complemento:comp,bairro,cep,cidade,uf});
   const linhas = [
-    L('Ana Ribeiro','Rua das Acácias','120','Apto 52','Jardim Exemplo','01000000','São Paulo','SP'),
-    L('Ana Ribeiro','Rua das Acácias','120','Apto 52','Jardim Exemplo','01000000','São Paulo','SP'),
-    L('Carlos Menezes','Rua das Acácias','120','Apto 52','Jardim Exemplo','01000000','São Paulo','SP'),
-    L('Beatriz Fontes','Av. Central','900','Sala 1203','Centro','20000000','Rio de Janeiro','RJ'),
-    L('Rafael Quintana','Av. Central','900','Sala 1203','Centro','20000000','Rio de Janeiro','RJ'),
-    L('Júlia Prado','Alameda dos Ipês','45','','Vila Modelo','80000000','Curitiba','PR'),
-    L('Marcos Lima','Rua Projetada','1500','Bloco B','Bairro Novo','30000000','Belo Horizonte','MG'),
-    L('Helena Sato','Travessa do Sol','12','','Centro','88000000','Florianópolis','SC'),
-    L('Otávio Reis','Rua do Porto','310','Casa 2','Ribeira','40000000','Salvador','BA')
+    L('Ana Ribeiro - Empresa Exemplo','Rua das Acácias','120','Apto 52','Jardim Exemplo','01000000','São Paulo','SP'),
+    L('Ana Ribeiro - Empresa Exemplo','Rua das Acácias','120','Apto 52','Jardim Exemplo','01000000','São Paulo','SP'),
+    L('Carlos Menezes - Empresa Exemplo','Rua das Acácias','120','Apto 52','Jardim Exemplo','01000000','São Paulo','SP'),
+    L('Beatriz Fontes - Grupo Horizonte','Av. Central','900','Sala 1203','Centro','20000000','Rio de Janeiro','RJ'),
+    L('Rafael Quintana - Grupo Horizonte','Av. Central','900','Sala 1203','Centro','20000000','Rio de Janeiro','RJ'),
+    L('Júlia Prado - Vila Nova Energia','Alameda dos Ipês','45','','Vila Modelo','80000000','Curitiba','PR'),
+    L('Marcos Lima - Conselho Atlas','Rua Projetada','1500','Bloco B','Bairro Novo','30000000','Belo Horizonte','MG'),
+    L('Helena Sato - Atlas Governance','Travessa do Sol','12','','Centro','88000000','Florianópolis','SC'),
+    L('Otávio Reis - Banco Litoral','Rua do Porto','310','Casa 2','Ribeira','40000000','Salvador','BA')
   ];
   const d0 = new Date(); d0.setDate(d0.getDate() - 9);
   const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -816,16 +816,16 @@ function loadDemo(){
   state.lotes.push({id:'demo1', nome:'Lote 1', dataEnvio:iso(d0), arquivo:'exemplo_lote1.csv', importadoEm:Date.now(), linhas});
   const I = (codigo,dest,status,prev,descricao='') => ({codigo, nf:'DEC-'+codigo.slice(-5), dest, status, emissao:br(d0), previsao:br(plus(prev)), descricao});
   state.relatorios.push({id:'demoR1', dataRef:iso(plus(3)), arquivo:'exemplo_status_1.xlsx', importadoEm:Date.now()-2000, itens:[
-    I('90000000000001','ANA RIBEIRO','EM ROTA',3), I('90000000000002','ANA RIBEIRO','EM ROTA',3), I('90000000000003','CARLOS MENEZES','EM ROTA',3),
-    I('90000000000004','BEATRIZ FONTES','ENTRADA',4), I('90000000000005','RAFAEL QUINTANA','ENTRADA',4),
-    I('90000000000006','EXEMPLO SA - JULIA PRADO','TRANSFERIDO PARA UNIDADE',5), I('90000000000007','MARCOS LIMA','CUSTODIA',5,'ENDERECO INSUFICIENTE- AGUARDANDO COMPLEMENTOS'),
+    I('90000000000001','ANA RIBEIRO - EMPRESA EXEMPLO','EM ROTA',3), I('90000000000002','ANA RIBEIRO - EMPRESA EXEMPLO','EM ROTA',3), I('90000000000003','CARLOS MENEZES - EMPRESA EXEMPLO','EM ROTA',3),
+    I('90000000000004','BEATRIZ FONTES - GRUPO HORIZONTE','ENTRADA',4), I('90000000000005','RAFAEL QUINTANA - GRUPO HORIZONTE','ENTRADA',4),
+    I('90000000000006','JULIA PRADO - VILA NOVA','TRANSFERIDO PARA UNIDADE',5), I('90000000000007','MARCOS LIMA - CONSELHO ATLAS','CUSTODIA',5,'ENDERECO INSUFICIENTE- AGUARDANDO COMPLEMENTOS'),
     I('90000000000009','FERNANDA ALVES','ENTRADA',5)
   ]});
   state.relatorios.push({id:'demoR2', dataRef:iso(plus(7)), arquivo:'exemplo_status_2.xlsx', importadoEm:Date.now()-1000, itens:[
-    I('90000000000001','ANA RIBEIRO','ENTREGUE',3), I('90000000000002','ANA RIBEIRO','ENTREGUE',3), I('90000000000003','CARLOS MENEZES','ENTREGUE',3),
-    I('90000000000004','BEATRIZ FONTES','ENTREGUE',4), I('90000000000005','RAFAEL QUINTANA','EM DEVOLUCAO',4,'DESTINATARIO AUSENTE - 3 TENTATIVAS'),
-    I('90000000000006','EXEMPLO SA - JULIA PRADO','EM ROTA',5), I('90000000000007','MARCOS LIMA','CUSTODIA',5,'ENDERECO INSUFICIENTE- AGUARDANDO COMPLEMENTOS'),
-    I('90000000000008','HELENA SATO','ENTREGUE',4), I('90000000000009','FERNANDA ALVES','EM ROTA',5)
+    I('90000000000001','ANA RIBEIRO - EMPRESA EXEMPLO','ENTREGUE',3), I('90000000000002','ANA RIBEIRO - EMPRESA EXEMPLO','ENTREGUE',3), I('90000000000003','CARLOS MENEZES - EMPRESA EXEMPLO','ENTREGUE',3),
+    I('90000000000004','BEATRIZ FONTES - GRUPO HORIZONTE','ENTREGUE',4), I('90000000000005','RAFAEL QUINTANA - GRUPO HORIZONTE','EM DEVOLUCAO',4,'DESTINATARIO AUSENTE - 3 TENTATIVAS'),
+    I('90000000000006','JULIA PRADO - VILA NOVA','EM ROTA',5), I('90000000000007','MARCOS LIMA - CONSELHO ATLAS','CUSTODIA',5,'ENDERECO INSUFICIENTE- AGUARDANDO COMPLEMENTOS'),
+    I('90000000000008','HELENA SATO - ATLAS GOVERNANCE','ENTREGUE',4), I('90000000000009','FERNANDA ALVES','EM ROTA',5)
   ]});
   state.acareacoes['90000000000004'] = {status:'aberta', nota:'Exemplo: Jadlog marcou como entregue, mas a destinatária diz que não recebeu. Pedido o comprovante com nome de quem assinou.', abertaEm:br(plus(8))};
   save(); rerender();
