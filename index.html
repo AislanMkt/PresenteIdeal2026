@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Presente Ideal 2026 – Acompanhamento de envios</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  color-scheme: light;
+  --paper:#F4F7F6; --surface:#FFFFFF; --ink:#22292C; --muted:#5B666A; --line:#D9E1DE; --soft:#EAF0EE;
+  --teal:#0F9E80; --teal-ink:#0A7560; --wine:#8E2C3F; --amber:#C27C0E; --route:#4A7BA6;
+  --transf:#86A5C0; --entrada:#A7B4BC; --outro:#8C8C8C; --none:#E3E9E6; --none-line:#C9D3CF;
+  --focus:#0F9E80;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --paper:#121918; --surface:#1A2321; --ink:#E7EEEC; --muted:#9AA8A4; --line:#2C3936; --soft:#22302D;
+    --teal:#2DC3A0; --teal-ink:#6BDDC2; --wine:#D3687E; --amber:#E3A43A; --route:#74A3CC;
+    --transf:#8DAECB; --entrada:#6E7E86; --outro:#8F9894; --none:#26322F; --none-line:#3A4845; --focus:#2DC3A0;
+  }
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 64px}
+header.top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.brand small{display:block;color:var(--teal-ink);font-weight:600;font-size:14px}
+.brand h1{margin:2px 0 0;font-size:clamp(26px,3.4vw,36px);line-height:1.1;font-weight:800;letter-spacing:-0.02em}
+.stamp{color:var(--muted);font-size:13.5px;text-align:right}
+nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:26px;overflow-x:auto}
+nav.tabs button{appearance:none;background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px 9px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--teal)}
+nav.tabs .count{display:inline-block;min-width:20px;padding:0 6px;margin-left:6px;border-radius:10px;background:var(--wine);color:#fff;font-size:12px;line-height:20px;text-align:center}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+h2{font-size:19px;margin:0 0 4px;font-weight:700;letter-spacing:-0.01em}
+h3{font-size:16px;margin:0 0 6px;font-weight:700}
+p.lead{color:var(--muted);margin:0 0 16px;max-width:70ch}
+section.block{margin-bottom:38px}
+
+/* Hero */
+.hero{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:26px 26px 22px;margin-bottom:22px}
+.hero-num{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.hero-num .big{font-size:clamp(44px,7vw,72px);font-weight:800;line-height:1;letter-spacing:-0.03em;color:var(--teal-ink);font-variant-numeric:tabular-nums}
+.hero-num .of{font-size:18px;color:var(--muted);font-weight:500}
+.hero-num .of strong{color:var(--ink)}
+.pipe{display:flex;height:38px;border-radius:8px;overflow:hidden;margin:20px 0 14px;background:var(--none)}
+.pipe span{display:block;height:100%;min-width:2px}
+.pipe .seg-SEM{background:repeating-linear-gradient(135deg,var(--none) 0 7px,var(--none-line) 7px 9px)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:14px}
+.legend .it{display:flex;align-items:center;gap:8px}
+.dot{width:11px;height:11px;border-radius:3px;flex:none}
+.legend b{font-variant-numeric:tabular-nums}
+.legend .pct{color:var(--muted);font-variant-numeric:tabular-nums}
+.hero-note{margin-top:12px;color:var(--muted);font-size:13.5px}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-bottom:34px;overflow:hidden}
+.kpi{padding:16px 20px;border-right:1px solid var(--line)}
+.kpi:last-child{border-right:0}
+.kpi .v{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .l{color:var(--muted);font-size:13.5px}
+.kpi.alert .v{color:var(--wine)}
+.kpi.warn .v{color:var(--amber)}
+.kpi button.linkish{margin-top:4px}
+
+/* Tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:13px;white-space:nowrap;background:var(--soft)}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td.code{font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-weight:600;font-size:13px}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 7px;border-radius:6px;background:var(--soft);color:var(--muted);margin:2px 4px 0 0;white-space:nowrap}
+.tag.wine{background:color-mix(in srgb,var(--wine) 16%,transparent);color:var(--wine)}
+.tag.amber{background:color-mix(in srgb,var(--amber) 18%,transparent);color:var(--amber)}
+.sub{color:var(--muted);font-size:13px}
+.bar-mini{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--none);min-width:120px}
+
+/* Forms */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.panel > p{color:var(--muted);margin:0 0 14px;font-size:14px}
+label.f{display:block;font-size:13.5px;font-weight:600;margin:0 0 4px}
+.field{margin-bottom:12px}
+input[type=text],input[type=date],input[type=search],select,textarea{width:100%;font:inherit;font-size:14.5px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink)}
+textarea{min-height:90px;resize:vertical}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.row > .field{flex:1 1 160px}
+.btn{appearance:none;font:inherit;font-weight:600;font-size:14px;padding:9px 15px;border-radius:8px;border:1px solid var(--teal);background:var(--teal);color:#fff;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--teal-ink)}
+.btn.danger{background:transparent;color:var(--wine);border-color:var(--wine)}
+.btn.small{padding:4px 10px;font-size:13px}
+.linkish{appearance:none;background:none;border:0;padding:0;font:inherit;font-size:13.5px;font-weight:600;color:var(--teal-ink);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.file{display:block;border:1.5px dashed var(--line);border-radius:10px;padding:18px;text-align:center;cursor:pointer;color:var(--muted);font-size:14px}
+.file:hover{border-color:var(--teal)}
+.file input{display:block;margin:8px auto 0;font-size:13px;max-width:100%}
+.msg{margin-top:12px;font-size:14px;border-radius:8px;padding:10px 12px;display:none}
+.msg.ok{display:block;background:color-mix(in srgb,var(--teal) 14%,transparent);color:var(--ink)}
+.msg.err{display:block;background:color-mix(in srgb,var(--wine) 14%,transparent);color:var(--ink)}
+ul.imports{list-style:none;margin:14px 0 0;padding:0;border-top:1px solid var(--line)}
+ul.imports li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.banner{border-radius:10px;padding:12px 14px;margin-bottom:20px;font-size:14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.banner.demo{background:color-mix(in srgb,var(--amber) 16%,transparent)}
+.banner.warn{background:color-mix(in srgb,var(--wine) 14%,transparent)}
+.empty{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:34px 26px;max-width:680px}
+.empty h2{font-size:22px;margin-bottom:8px}
+.empty ol{padding-left:20px;margin:10px 0 18px;color:var(--muted)}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.filters > *{flex:1 1 180px}
+.chart svg{width:100%;height:auto;display:block}
+.pend-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.pend-h .n{font-weight:800;font-size:20px;font-variant-numeric:tabular-nums}
+.acao{font-size:13.5px;color:var(--muted);margin:0 0 10px;max-width:80ch}
+.okline{color:var(--muted);font-size:14px;padding:12px 0}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);padding:22px;max-width:520px;width:calc(100% - 32px)}
+dialog::backdrop{background:rgba(10,20,18,.45)}
+.dl-actions{display:flex;gap:10px;justify-content:space-between;margin-top:16px;flex-wrap:wrap}
+@media (max-width:640px){.kpi{border-right:0;border-bottom:1px solid var(--line)}.stamp{text-align:left}}
+@media (prefers-reduced-motion:no-preference){.pipe span{transition:flex-basis .4s ease}}
+</style>
+
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:_dlc_DocId msdt:dt="string">4YX743PNWPKN-835332818-1425002</mso:_dlc_DocId>
+<mso:_dlc_DocIdItemGuid msdt:dt="string">0017fd6c-8594-4468-8ce2-160fc94f89e2</mso:_dlc_DocIdItemGuid>
+<mso:_dlc_DocIdUrl msdt:dt="string">https://nexto.sharepoint.com/sites/AtlasGov/_layouts/15/DocIdRedir.aspx?ID=4YX743PNWPKN-835332818-1425002, 4YX743PNWPKN-835332818-1425002</mso:_dlc_DocIdUrl>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <small>Presente Ideal 2026 · Atlas VII</small>
+      <h1>Acompanhamento de envios</h1>
+    </div>
+    <div class="stamp" id="stamp"></div>
+  </header>
+
+  <div id="banners"></div>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="painel" aria-selected="true">Painel</button>
+    <button role="tab" data-tab="pendencias" aria-selected="false">Pendências<span class="count" id="cntPend" hidden></span></button>
+    <button role="tab" data-tab="volumes" aria-selected="false">Todos os volumes</button>
+    <button role="tab" data-tab="acareacoes" aria-selected="false">Acareações<span class="count" id="cntAcar" hidden></span></button>
+    <button role="tab" data-tab="dados" aria-selected="false">Importar dados</button>
+  </nav>
+
+  <main>
+    <section id="tab-painel"></section>
+    <section id="tab-pendencias" hidden></section>
+    <section id="tab-volumes" hidden>
+      <h2>Todos os volumes</h2>
+      <p class="lead">Uma linha por garrafa ou caixa. Cruza o que foi enviado nos lotes com o último status informado pela Jadlog.</p>
+      <div class="filters">
+        <input type="search" id="fBusca" placeholder="Buscar nome, código, cidade" aria-label="Buscar">
+        <select id="fLote" aria-label="Filtrar por lote"></select>
+        <select id="fStatus" aria-label="Filtrar por status"></select>
+      </div>
+      <div id="volTable"></div>
+    </section>
+    <section id="tab-acareacoes" hidden></section>
+    <section id="tab-dados" hidden>
+      <div class="grid2">
+        <div class="panel">
+          <h3>Lote enviado à Jadlog</h3>
+          <p>A mesma planilha de endereços mandada para a Jadlog (CSV com ponto e vírgula ou Excel). Cada linha conta como um volume.</p>
+          <div class="row">
+            <div class="field"><label class="f" for="loteNome">Nome do lote</label><input type="text" id="loteNome" placeholder="Ex.: Lote 1"></div>
+            <div class="field"><label class="f" for="loteData">Data de envio</label><input type="date" id="loteData"></div>
+          </div>
+          <label class="file">Escolha o arquivo do lote
+            <input type="file" id="loteFile" accept=".csv,.txt,.xlsx,.xls">
+          </label>
+          <div class="msg" id="loteMsg" role="status"></div>
+          <ul class="imports" id="loteList"></ul>
+        </div>
+        <div class="panel">
+          <h3>Relatório de status da Jadlog</h3>
+          <p>A planilha de atualização que a Jadlog manda (Código, Nota Fiscal, Destinatário, Status, Previsão, Descrição). Importe cada relatório novo: o histórico fica guardado.</p>
+          <div class="field"><label class="f" for="relData">Data do relatório</label><input type="date" id="relData"></div>
+          <label class="file">Escolha o arquivo do relatório
+            <input type="file" id="relFile" accept=".csv,.txt,.xlsx,.xls">
+          </label>
+          <div class="field" style="margin-top:14px"><label class="f" for="relPaste">Ou cole a tabela do e-mail (com o cabeçalho)</label><textarea id="relPaste" placeholder="Código	Nota Fiscal	Destinatário	CNPJ/CPF	Status	Dt Emissão	Previsão	Descrição"></textarea></div>
+          <button class="btn ghost" id="relPasteBtn">Importar tabela colada</button>
+          <div class="msg" id="relMsg" role="status"></div>
+          <ul class="imports" id="relList"></ul>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:20px">
+        <h3>Guardar e compartilhar</h3>
+        <p>Os dados ficam salvos só neste navegador, neste computador. Nada é enviado para o GitHub nem para outro lugar. Para levar para outro computador ou passar para um colega, baixe o backup e carregue lá.</p>
+        <div class="row">
+          <button class="btn" id="expXlsx">Baixar planilha consolidada</button>
+          <button class="btn ghost" id="expJson">Baixar backup</button>
+          <label class="btn ghost" style="display:inline-block">Carregar backup<input type="file" id="impJson" accept=".json" hidden></label>
+          <button class="btn danger" id="wipe">Apagar todos os dados</button>
+        </div>
+        <div class="msg" id="bkMsg" role="status"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<dialog id="dlg">
+  <h3 id="dlgTitle">Acareação</h3>
+  <p class="sub" id="dlgInfo"></p>
+  <div class="field"><label class="f" for="dlgStatus">Situação</label>
+    <select id="dlgStatus">
+      <option value="aberta">Aberta</option>
+      <option value="em investigação">Em investigação com a Jadlog</option>
+      <option value="resolvida">Resolvida</option>
+    </select>
+  </div>
+  <div class="field"><label class="f" for="dlgNota">O que aconteceu e o que foi feito</label>
+    <textarea id="dlgNota" placeholder="Ex.: Jadlog marcou como entregue, mas a destinatária não recebeu. Pedido comprovante de entrega em 12/01."></textarea>
+  </div>
+  <div class="dl-actions">
+    <button class="btn danger small" id="dlgDel">Remover acareação</button>
+    <span class="row"><button class="btn ghost" id="dlgCancel">Cancelar</button><button class="btn" id="dlgSave">Salvar</button></span>
+  </div>
+</dialog>
+
+<script>
+/* ================== Configuração ================== */
+const STORE_KEY = 'pi2026-envios-v1';
+const STATUS = {
+  'ENTREGUE':     {label:'Entregue',                  color:'var(--teal)'},
+  'EM ROTA':      {label:'Em rota',                   color:'var(--route)'},
+  'TRANSFERIDO':  {label:'Transferido para unidade',  color:'var(--transf)'},
+  'ENTRADA':      {label:'Entrada',                   color:'var(--entrada)'},
+  'CUSTODIA':     {label:'Custódia (falta endereço)', color:'var(--amber)'},
+  'EM DEVOLUCAO': {label:'Em devolução',              color:'var(--wine)'},
+  'OUTRO':        {label:'Outro status',              color:'var(--outro)'},
+  'SEM':          {label:'Sem rastreio ainda',        color:'var(--none-line)'}
+};
+const ORDER = ['ENTREGUE','EM ROTA','TRANSFERIDO','ENTRADA','CUSTODIA','EM DEVOLUCAO','OUTRO','SEM'];
+const TRANSITO = ['EM ROTA','TRANSFERIDO','ENTRADA','OUTRO'];
+
+/* ================== Estado ================== */
+function blank(){ return {lotes:[], relatorios:[], vinculos:{}, acareacoes:{}, demo:false}; }
+let storageOK = true;
+try { localStorage.setItem('__t','1'); localStorage.removeItem('__t'); } catch(e){ storageOK = false; }
+function load(){
+  if(!storageOK) return blank();
+  try { const raw = localStorage.getItem(STORE_KEY); if(raw) return Object.assign(blank(), JSON.parse(raw)); } catch(e){}
+  return blank();
+}
+function save(){ if(!storageOK) return; try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e){ storageOK = false; renderBanners(); } }
+let state = load();
+const uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
+
+/* ================== Utilidades ================== */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();
+const STOP = new Set(['PELO','PELA','DOS','DAS','COM','PARA','LTDA']);
+function feat(s){ const n = norm(s); return {n, toks:new Set(n.split(' ').filter(t => t.length >= 3 && !STOP.has(t)))}; }
+function sim(a,b){
+  if(!a.n || !b.n) return 0;
+  if(a.n === b.n) return 1;
+  if(Math.min(a.n.length,b.n.length) >= 5 && (a.n.includes(b.n) || b.n.includes(a.n))) return 0.9;
+  let inter = 0; a.toks.forEach(t => { if(b.toks.has(t)) inter++; });
+  const uni = a.toks.size + b.toks.size - inter;
+  return uni ? (inter/uni)*0.85 : 0;
+}
+function normStatus(s){
+  const n = norm(s);
+  if(!n) return 'OUTRO';
+  if(n.includes('DEVOLU') || n.includes('DEVOLVID')) return 'EM DEVOLUCAO';
+  if(n.includes('CUSTODIA')) return 'CUSTODIA';
+  if(n.includes('ENTREGUE')) return 'ENTREGUE';
+  if(n.includes('ROTA')) return 'EM ROTA';
+  if(n.includes('TRANSFER')) return 'TRANSFERIDO';
+  if(n.includes('ENTRADA')) return 'ENTRADA';
+  return 'OUTRO';
+}
+const pad = n => String(n).padStart(2,'0');
+function toBR(d){ return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear(); }
+function cellDate(v){
+  if(v instanceof Date && !isNaN(v)) return toBR(v);
+  const s = String(v ?? '').trim();
+  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if(m){ const y = m[3].length === 2 ? '20'+m[3] : m[3]; return pad(m[1])+'/'+pad(m[2])+'/'+y; }
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return m[3]+'/'+m[2]+'/'+m[1];
+  return s;
+}
+function parseBR(s){ const m = String(s||'').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? new Date(+m[3], +m[2]-1, +m[1]) : null; }
+function parseISO(s){ const m = String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? new Date(+m[1], +m[2]-1, +m[3]) : null; }
+const isoToBR = s => { const d = parseISO(s); return d ? toBR(d) : (s||''); };
+function todayISO(){ const d = new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function startToday(){ const d = new Date(); d.setHours(0,0,0,0); return d; }
+const pct = (a,b) => b ? Math.round(a*1000/b)/10 : 0;
+const fmtPct = v => v.toLocaleString('pt-BR',{maximumFractionDigits:1}) + '%';
+const fmtN = v => v.toLocaleString('pt-BR');
+function cellCode(v){
+  if(typeof v === 'number') return Math.round(v).toLocaleString('fullwide',{useGrouping:false});
+  return String(v ?? '').trim().replace(/\s+/g,'');
+}
+
+/* ================== Leitura de arquivos ================== */
+function decodeText(buf){
+  let t;
+  try { t = new TextDecoder('utf-8',{fatal:true}).decode(buf); }
+  catch(e){ t = new TextDecoder('windows-1252').decode(buf); }
+  return t.replace(/^\uFEFF/,'');
+}
+function parseDelimited(text){
+  const first = (text.split(/\r?\n/).find(l => l.trim()) || '');
+  const counts = {';':(first.match(/;/g)||[]).length, '\t':(first.match(/\t/g)||[]).length, ',':(first.match(/,/g)||[]).length};
+  const d = Object.keys(counts).sort((a,b) => counts[b]-counts[a])[0];
+  const rows = []; let row = [], cur = '', q = false;
+  for(let i = 0; i < text.length; i++){
+    const c = text[i];
+    if(q){
+      if(c === '"'){ if(text[i+1] === '"'){ cur += '"'; i++; } else q = false; }
+      else cur += c;
+    } else if(c === '"' && cur === ''){ q = true; }
+    else if(c === d){ row.push(cur); cur = ''; }
+    else if(c === '\n' || c === '\r'){
+      if(c === '\r' && text[i+1] === '\n') i++;
+      row.push(cur); rows.push(row); row = []; cur = '';
+    } else cur += c;
+  }
+  if(cur !== '' || row.length){ row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(x => String(x).trim() !== ''));
+}
+async function readRows(file){
+  const buf = await file.arrayBuffer();
+  const name = file.name.toLowerCase();
+  if(name.endsWith('.xlsx') || name.endsWith('.xls')){
+    if(typeof XLSX === 'undefined') throw new Error('Não consegui carregar o leitor de Excel (sem internet?). Salve o arquivo como CSV e tente de novo.');
+    const wb = XLSX.read(buf, {type:'array', cellDates:true});
+    let best = null;
+    for(const sn of wb.SheetNames){
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], {header:1, raw:true, defval:''});
+      if(!best || rows.length > best.length) best = rows;
+      if(findReportHeader(rows) >= 0 || findLoteHeader(rows) >= 0) return rows;
+    }
+    return best || [];
+  }
+  return parseDelimited(decodeText(buf));
+}
+
+/* ---------- Lote (modelo Jadlog) ---------- */
+function findLoteHeader(rows){
+  for(let i = 0; i < Math.min(rows.length, 20); i++){
+    if(rows[i].some(c => String(c).trim().toLowerCase() === 'dest_nome')) return i;
+  }
+  return -1;
+}
+function parseLote(rows){
+  const h = findLoteHeader(rows);
+  if(h < 0) throw new Error('Não encontrei a coluna dest_nome. Confira se o arquivo está no modelo da Jadlog (rem_cnpj; dest_doc; dest_IE; dest_nome; ...).');
+  const head = rows[h].map(c => String(c).trim().toLowerCase());
+  const ix = k => head.indexOf(k);
+  const col = {nome:ix('dest_nome'), endereco:ix('dest_endereco'), numero:ix('dest_numero'), complemento:ix('dest_complemento'),
+               bairro:ix('dest_bairro'), cep:ix('dest_cep'), cidade:ix('dest_cidade'), uf:ix('dest_uf')};
+  const out = [];
+  for(let r = h+1; r < rows.length; r++){
+    const g = k => col[k] >= 0 ? String(rows[r][col[k]] ?? '').trim() : '';
+    if(!g('nome')) continue;
+    let cep = g('cep').replace(/\D/g,'');
+    if(typeof rows[r][col.cep] === 'number' && cep.length === 7) cep = '0' + cep; // Excel tira o zero inicial
+    out.push({nome:g('nome'), endereco:g('endereco'), numero:g('numero'), complemento:g('complemento'), bairro:g('bairro'), cep, cidade:g('cidade'), uf:g('uf').toUpperCase()});
+  }
+  return out;
+}
+
+/* ---------- Relatório de status Jadlog ---------- */
+function findReportHeader(rows){
+  for(let i = 0; i < Math.min(rows.length, 25); i++){
+    const n = rows[i].map(norm);
+    if(n.some(c => c.includes('STATUS')) && n.some(c => c.startsWith('COD') || c.includes('DESTINAT'))) return i;
+  }
+  return -1;
+}
+function parseReport(rows){
+  const h = findReportHeader(rows);
+  if(h < 0) throw new Error('Não encontrei as colunas Código e Status. Confira se é o relatório de atualização da Jadlog e se o cabeçalho veio junto.');
+  const head = rows[h].map(norm);
+  const find = test => head.findIndex(test);
+  const col = {
+    codigo: find(c => c.startsWith('COD') || c.includes('RASTREIO')),
+    nf: find(c => c.includes('NOTA')),
+    dest: find(c => c.includes('DESTINAT')),
+    status: find(c => c.includes('STATUS')),
+    emissao: find(c => c.includes('EMISS')),
+    previsao: find(c => c.includes('PREVIS')),
+    descricao: find(c => c.includes('DESCRI') || c.includes('OCORR'))
+  };
+  if(col.codigo < 0) throw new Error('Não encontrei a coluna Código no relatório.');
+  const out = []; const seen = new Set();
+  for(let r = h+1; r < rows.length; r++){
+    const row = rows[r];
+    const codigo = cellCode(row[col.codigo]);
+    if(!codigo || !/\d/.test(codigo) || seen.has(codigo)) continue;
+    seen.add(codigo);
+    const g = k => col[k] >= 0 ? row[col[k]] : '';
+    out.push({codigo, nf:String(g('nf')??'').trim(), dest:String(g('dest')??'').trim(), status:String(g('status')??'').trim(),
+              emissao:cellDate(g('emissao')), previsao:cellDate(g('previsao')), descricao:String(g('descricao')??'').trim()});
+  }
+  if(!out.length) throw new Error('O relatório não tem nenhuma linha com código de rastreio.');
+  return out;
+}
+
+/* ================== Cruzamento ================== */
+function daysBetween(a,b){ return (a && b) ? Math.abs((a-b)/86400000) : 9999; }
+function compute(){
+  // 1. Último status de cada código (relatórios em ordem de data)
+  const reps = [...state.relatorios].sort((a,b) => a.dataRef.localeCompare(b.dataRef) || a.importadoEm - b.importadoEm);
+  const codes = new Map();
+  for(const r of reps){
+    for(const it of r.itens){
+      let c = codes.get(it.codigo);
+      if(!c){ c = {hist:[]}; codes.set(it.codigo, c); }
+      Object.assign(c, it, {st:normStatus(it.status), dataRef:r.dataRef});
+      c.hist.push({dataRef:r.dataRef, st:normStatus(it.status)});
+    }
+  }
+  codes.forEach(c => { c.f = feat(c.dest); c.emDate = parseBR(c.emissao); c.manual = false; c.score = 0; });
+
+  // 2. Volumes dos lotes
+  const lines = [];
+  for(const l of state.lotes) l.linhas.forEach((x,i) => lines.push(Object.assign({key:l.id+':'+i, lote:l, f:feat(x.nome), envDate:parseISO(l.dataEnvio)}, x)));
+  const lineByKey = new Map(lines.map(x => [x.key, x]));
+  const lineCode = new Map(), codeLine = new Map();
+  const link = (c,l,s,manual) => { lineCode.set(l.key,c); codeLine.set(c.codigo,l); c.score = s; c.manual = !!manual; };
+
+  // 3a. Vínculos manuais
+  for(const [cod,key] of Object.entries(state.vinculos)){
+    const c = codes.get(cod), l = lineByKey.get(key);
+    if(c && l && !lineCode.has(key) && !codeLine.has(cod)) link(c,l,1,true);
+  }
+  // 3b. Nome idêntico (escolhe o lote com data mais próxima da emissão)
+  const byN = new Map();
+  for(const l of lines){ if(lineCode.has(l.key) || !l.f.n) continue; if(!byN.has(l.f.n)) byN.set(l.f.n,[]); byN.get(l.f.n).push(l); }
+  const rest = [];
+  const freeCodes = [...codes.values()].filter(c => !codeLine.has(c.codigo)).sort((a,b) => a.codigo.localeCompare(b.codigo));
+  for(const c of freeCodes){
+    const arr = byN.get(c.f.n);
+    if(arr && arr.length){
+      let bi = 0, bp = Infinity;
+      arr.forEach((l,i) => { const p = daysBetween(l.envDate, c.emDate); if(p < bp){ bp = p; bi = i; } });
+      link(c, arr.splice(bi,1)[0], 1);
+    } else rest.push(c);
+  }
+  // 3c. Nome parecido (empresa na frente, abreviações etc.)
+  const tokIdx = new Map();
+  for(const l of lines){ if(lineCode.has(l.key)) continue; l.f.toks.forEach(t => { if(!tokIdx.has(t)) tokIdx.set(t,[]); tokIdx.get(t).push(l); }); }
+  const pairs = [];
+  for(const c of rest){
+    const cand = new Set();
+    c.f.toks.forEach(t => (tokIdx.get(t)||[]).forEach(l => cand.add(l)));
+    cand.forEach(l => { const s = sim(c.f,l.f); if(s >= 0.5) pairs.push({c,l,s,p:daysBetween(l.envDate,c.emDate)}); });
+  }
+  pairs.sort((a,b) => b.s - a.s || a.p - b.p);
+  for(const {c,l,s} of pairs){ if(codeLine.has(c.codigo) || lineCode.has(l.key)) continue; link(c,l,s); }
+
+  // 4. Linhas finais
+  const today = startToday();
+  const mk = (l,c) => {
+    const st = c ? c.st : 'SEM';
+    const prev = c ? parseBR(c.previsao) : null;
+    const acar = c ? state.acareacoes[c.codigo] || null : null;
+    return {line:l, code:c, st, atrasado: !!(c && st !== 'ENTREGUE' && prev && prev < today), acar,
+            nomeDif: !!(c && l && c.score < 1)};
+  };
+  const rows = lines.map(l => mk(l, lineCode.get(l.key)));
+  codes.forEach(c => { if(!codeLine.has(c.codigo)) rows.push(mk(null,c)); });
+
+  // 5. Evolução por relatório
+  const evo = [];
+  const acc = new Map();
+  const dates = [...new Set(reps.map(r => r.dataRef))];
+  for(const d of dates){
+    reps.filter(r => r.dataRef === d).forEach(r => r.itens.forEach(it => acc.set(it.codigo, normStatus(it.status))));
+    const cnt = {}; ORDER.forEach(k => cnt[k] = 0);
+    acc.forEach(st => cnt[st]++);
+    const total = Math.max(lines.length, acc.size);
+    cnt.SEM = total - acc.size;
+    evo.push({date:d, cnt, total});
+  }
+  return {rows, lines, codes, evo, reps};
+}
+function countBy(rows){ const c = {}; ORDER.forEach(k => c[k] = 0); rows.forEach(r => c[r.st]++); return c; }
+
+/* ================== Renderização ================== */
+let D = null;
+function rerender(){ D = compute(); renderBanners(); renderStamp(); renderPainel(); renderPend(); renderVolFilters(); renderVol(); renderAcar(); renderDados(); }
+
+function renderBanners(){
+  let h = '';
+  if(!storageOK) h += `<div class="banner warn"><span>Este navegador não está deixando a página salvar os dados. Eles somem ao fechar a aba. Use “Baixar backup” em Importar dados antes de sair.</span></div>`;
+  if(state.demo) h += `<div class="banner demo"><span>Você está vendo dados de exemplo, com nomes e endereços fictícios.</span><button class="btn small danger" data-act="clear-demo">Apagar exemplo</button></div>`;
+  document.getElementById('banners').innerHTML = h;
+}
+function renderStamp(){
+  const last = D.reps.length ? D.reps[D.reps.length-1].dataRef : null;
+  document.getElementById('stamp').innerHTML = last ? `Último relatório da Jadlog: <strong>${isoToBR(last)}</strong><br>${state.lotes.length} lote(s) · ${state.relatorios.length} relatório(s)` : '';
+}
+function pill(st){ return `<span class="pill"><span class="dot" style="background:${STATUS[st].color}"></span>${STATUS[st].label}</span>`; }
+function miniBar(c,total){
+  return `<div class="bar-mini" aria-hidden="true">${ORDER.map(k => c[k] ? `<span style="flex:0 0 ${c[k]*100/total}%;background:${STATUS[k].color}"></span>` : '').join('')}</div>`;
+}
+
+function renderPainel(){
+  const el = document.getElementById('tab-painel');
+  const {rows, evo} = D;
+  if(!rows.length){
+    el.innerHTML = `<div class="empty">
+      <h2>Nenhum envio carregado ainda</h2>
+      <p class="lead">O painel cruza o que foi enviado com o que a Jadlog informa. Para começar:</p>
+      <ol>
+        <li>Em <strong>Importar dados</strong>, carregue a planilha de cada lote mandada para a Jadlog.</li>
+        <li>Quando chegar um relatório de status da Jadlog, carregue também, com a data dele.</li>
+        <li>Volte aqui para ver quantas garrafas já foram entregues e o que precisa de ação.</li>
+      </ol>
+      <div class="row"><button class="btn" data-goto="dados">Importar dados</button><button class="btn ghost" data-act="demo">Ver com dados de exemplo</button></div>
+    </div>`;
+    return;
+  }
+  const total = rows.length;
+  const c = countBy(rows);
+  const acarAbertas = rows.filter(r => r.acar && r.acar.status !== 'resolvida').length;
+  const entregueOk = rows.filter(r => r.st === 'ENTREGUE' && !(r.acar && r.acar.status !== 'resolvida')).length;
+  const transito = TRANSITO.reduce((s,k) => s + c[k], 0);
+  const atrasados = rows.filter(r => r.atrasado && TRANSITO.includes(r.st)).length;
+  const acao = c.CUSTODIA + c['EM DEVOLUCAO'] + acarAbertas;
+  const semLote = rows.filter(r => !r.line).length;
+
+  let h = `<div class="hero">
+    <div class="hero-num"><span class="big">${fmtPct(pct(entregueOk,total))}</span>
+      <span class="of"><strong>${fmtN(entregueOk)}</strong> de <strong>${fmtN(total)}</strong> volumes entregues</span></div>
+    <div class="pipe" role="img" aria-label="Distribuição dos volumes por status">${ORDER.map(k => c[k] ? `<span class="seg-${k.replace(' ','_')}${k==='SEM'?' seg-SEM':''}" style="flex:0 0 ${c[k]*100/total}%;${k==='SEM'?'':'background:'+STATUS[k].color}" title="${STATUS[k].label}: ${c[k]}"></span>` : '').join('')}</div>
+    <div class="legend">${ORDER.filter(k => c[k]).map(k => `<span class="it"><span class="dot" style="background:${STATUS[k].color}"></span>${STATUS[k].label} <b>${fmtN(c[k])}</b> <span class="pct">${fmtPct(pct(c[k],total))}</span></span>`).join('')}</div>
+    ${acarAbertas ? `<div class="hero-note">${acarAbertas} volume(s) marcados como entregues estão em acareação e não entram na taxa de entrega até serem resolvidos.</div>` : ''}
+    ${semLote ? `<div class="hero-note">${semLote} código(s) da Jadlog não foram ligados a nenhuma linha de lote. Veja em Pendências.</div>` : ''}
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="v">${fmtN(D.lines.length)}</div><div class="l">volumes nos lotes enviados</div></div>
+    <div class="kpi"><div class="v">${fmtN(transito)}</div><div class="l">a caminho (entrada, transferência ou rota)</div></div>
+    <div class="kpi ${acao?'alert':''}"><div class="v">${fmtN(acao)}</div><div class="l">precisam de ação (custódia, devolução, acareação)</div>${acao?'<button class="linkish" data-goto="pendencias">Ver pendências</button>':''}</div>
+    <div class="kpi ${atrasados?'warn':''}"><div class="v">${fmtN(atrasados)}</div><div class="l">a caminho com previsão vencida</div></div>
+  </div>`;
+
+  // Por lote
+  const groups = new Map();
+  for(const r of rows){ const k = r.line ? r.line.lote.id : '__sem'; if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(r); }
+  const order = [...state.lotes.map(l => l.id), '__sem'].filter(k => groups.has(k));
+  h += `<section class="block"><h2>Por lote</h2><p class="lead">Taxa de entrega e o que ainda falta em cada lote.</p><div class="tbl-wrap"><table>
+    <thead><tr><th>Lote</th><th>Enviado em</th><th class="num">Volumes</th><th class="num">Entregues</th><th class="num">A caminho</th><th class="num">Custódia</th><th class="num">Devolução</th><th class="num">Sem rastreio</th><th class="num">% entregue</th><th>Distribuição</th></tr></thead><tbody>`;
+  for(const k of order){
+    const g = groups.get(k), gc = countBy(g), lote = state.lotes.find(l => l.id === k);
+    h += `<tr><td><strong>${lote ? esc(lote.nome) : 'Sem lote identificado'}</strong></td><td>${lote ? isoToBR(lote.dataEnvio) : '—'}</td>
+      <td class="num">${g.length}</td><td class="num">${gc.ENTREGUE}</td><td class="num">${TRANSITO.reduce((s,x)=>s+gc[x],0)}</td>
+      <td class="num">${gc.CUSTODIA||''}</td><td class="num">${gc['EM DEVOLUCAO']||''}</td><td class="num">${gc.SEM||''}</td>
+      <td class="num"><strong>${fmtPct(pct(gc.ENTREGUE,g.length))}</strong></td><td>${miniBar(gc,g.length)}</td></tr>`;
+  }
+  h += `</tbody></table></div></section>`;
+
+  // Evolução
+  h += `<section class="block"><h2>Evolução a cada relatório</h2><p class="lead">Como os volumes foram mudando de status de um relatório da Jadlog para o outro.</p>`;
+  h += evo.length ? `<div class="panel chart">${evoSVG(evo)}</div>` : `<p class="okline">Importe o primeiro relatório de status da Jadlog para ver a evolução.</p>`;
+  h += `</section>`;
+  el.innerHTML = h;
+}
+function evoSVG(evo){
+  const bw = 46, gap = 34, top = 30, ch = 170, left = 10;
+  const W = Math.max(360, left*2 + evo.length*(bw+gap));
+  const H = top + ch + 42;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolução dos status por relatório" style="max-width:${Math.max(W,360)}px">`;
+  evo.forEach((e,i) => {
+    const x = left + i*(bw+gap) + gap/2;
+    let y = top + ch;
+    ORDER.forEach(k => {
+      const v = e.cnt[k]; if(!v) return;
+      const hgt = v/e.total*ch; y -= hgt;
+      s += `<rect x="${x}" y="${y.toFixed(1)}" width="${bw}" height="${hgt.toFixed(1)}" style="fill:${STATUS[k].color}"><title>${isoToBR(e.date)} · ${STATUS[k].label}: ${v}</title></rect>`;
+    });
+    s += `<text x="${x+bw/2}" y="${top-10}" text-anchor="middle" style="fill:var(--ink);font-size:13px;font-weight:700">${fmtPct(pct(e.cnt.ENTREGUE,e.total))}</text>`;
+    s += `<text x="${x+bw/2}" y="${top+ch+20}" text-anchor="middle" style="fill:var(--muted);font-size:12px">${isoToBR(e.date).slice(0,5)}</text>`;
+  });
+  return s + `</svg><p class="sub" style="margin:8px 0 0">O número acima de cada barra é a porcentagem entregue naquele relatório.</p>`;
+}
+
+/* ---------- Pendências ---------- */
+function rowName(r){
+  if(r.line) return `<strong>${esc(r.line.nome)}</strong>${r.nomeDif ? `<br><span class="sub">Jadlog: ${esc(r.code.dest)}</span>` : ''}`;
+  return `<strong>${esc(r.code.dest || '(sem nome)')}</strong><br><span class="sub">não ligado a um lote</span>`;
+}
+const place = r => r.line ? `${esc(r.line.cidade)}${r.line.uf ? '/'+esc(r.line.uf) : ''}` : '—';
+const loteName = r => r.line ? esc(r.line.lote.nome) : '—';
+function pendTable(list, cols){
+  return `<div class="tbl-wrap"><table><thead><tr><th>Destinatário</th><th>Lote</th><th>Cidade</th>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>${
+    list.map(r => `<tr><td>${rowName(r)}</td><td>${loteName(r)}</td><td>${place(r)}</td>${cols.map(c=>`<td>${c[1](r)}</td>`).join('')}</tr>`).join('')
+  }</tbody></table></div>`;
+}
+function renderPend(){
+  const el = document.getElementById('tab-pendencias');
+  const {rows} = D;
+  const cust = rows.filter(r => r.st === 'CUSTODIA');
+  const dev = rows.filter(r => r.st === 'EM DEVOLUCAO');
+  const atr = rows.filter(r => r.atrasado && TRANSITO.includes(r.st));
+  const sem = rows.filter(r => r.st === 'SEM');
+  const orf = rows.filter(r => !r.line);
+  const total = cust.length + dev.length + atr.length + orf.length;
+  const cnt = document.getElementById('cntPend');
+  cnt.hidden = !(cust.length + dev.length); cnt.textContent = cust.length + dev.length;
+
+  const codeCol = ['Código', r => `<span class="code">${esc(r.code.codigo)}</span>`];
+  const descCol = ['Descrição da Jadlog', r => esc(r.code.descricao) || '<span class="sub">—</span>'];
+  const prevCol = ['Previsão', r => esc(r.code.previsao)];
+  const block = (title, list, acao, cols) => `<section class="block"><div class="pend-h"><h2>${title}</h2><span class="n">${list.length}</span></div>
+    <p class="acao">${acao}</p>${list.length ? pendTable(list, cols) : '<p class="okline">Nada aqui.</p>'}</section>`;
+
+  let h = `<p class="lead">O que precisa de alguém da Atlas para andar. Quando o destinatário é cliente ou prospect, o contato com a pessoa passa pelo CSM ou vendedor responsável.</p>`;
+  if(!rows.length){ el.innerHTML = h + '<p class="okline">Importe lotes e relatórios para ver as pendências.</p>'; return; }
+  h += block('Custódia: falta dado de endereço', cust, 'A Jadlog está com o volume parado esperando complemento. Ação: confirmar com o destinatário o endereço completo (número, complemento, bloco, sala) e repassar à Jadlog junto com o código.', [codeCol, descCol, ['Desde', r => esc(r.code.emissao)]]);
+  h += block('Em devolução', dev, 'O volume está voltando para a Atlas. Ação: confirmar o endereço com o destinatário e decidir entre reenvio e cancelamento. No reenvio, lembrar que bebida alcoólica pode exigir recebedor maior de idade.', [codeCol, descCol]);
+  h += block('A caminho com previsão vencida', atr, 'Já passou da data prevista e ainda não foi entregue. Ação: pedir posição à Jadlog para estes códigos.', [codeCol, ['Status', r => pill(r.st)], prevCol, descCol]);
+  h += block('Códigos da Jadlog sem lote', orf, 'O nome no relatório da Jadlog não bateu com nenhum nome dos lotes. Ação: escolha a linha certa do lote para ligar o código. Se o volume não for do Presente Ideal, pode ignorar.', [codeCol, ['Status', r => pill(r.st)], ['Ligar à linha do lote', linkSelect]]);
+  h += `<section class="block"><div class="pend-h"><h2>Volumes sem rastreio ainda</h2><span class="n">${sem.length}</span></div>
+    <p class="acao">Estão nos lotes, mas ainda não apareceram em nenhum relatório da Jadlog. Logo depois do envio é normal. Se o lote já tem alguns dias, confirme a coleta com a Jadlog.</p>
+    ${sem.length ? pendTable(sem, [['Endereço', r => esc([r.line.endereco, r.line.numero, r.line.complemento].filter(Boolean).join(', '))]]) : '<p class="okline">Nada aqui.</p>'}</section>`;
+  el.innerHTML = h;
+}
+function linkSelect(r){
+  const free = D.rows.filter(x => x.st === 'SEM').map(x => x.line).sort((a,b) => a.nome.localeCompare(b.nome,'pt'));
+  if(!free.length) return '<span class="sub">Nenhuma linha de lote livre</span>';
+  return `<div class="row" style="flex-wrap:nowrap"><select data-linksel="${esc(r.code.codigo)}" style="min-width:220px"><option value="">Escolha…</option>${
+    free.map(l => `<option value="${esc(l.key)}">${esc(l.nome)} · ${esc(l.lote.nome)} · ${esc(l.cidade)}</option>`).join('')
+  }</select><button class="btn small" data-link="${esc(r.code.codigo)}">Ligar</button></div>`;
+}
+
+/* ---------- Todos os volumes ---------- */
+function renderVolFilters(){
+  const fl = document.getElementById('fLote'), fs = document.getElementById('fStatus');
+  const vl = fl.value, vs = fs.value;
+  fl.innerHTML = `<option value="">Todos os lotes</option>${state.lotes.map(l => `<option value="${esc(l.id)}">${esc(l.nome)}</option>`).join('')}<option value="__sem">Sem lote identificado</option>`;
+  fs.innerHTML = `<option value="">Todos os status</option>${ORDER.map(k => `<option value="${k}">${STATUS[k].label}</option>`).join('')}<option value="__atr">Previsão vencida</option><option value="__acar">Em acareação</option><option value="__dif">Nome diferente do lote</option>`;
+  fl.value = vl; fs.value = vs;
+}
+function renderVol(){
+  const q = norm(document.getElementById('fBusca').value);
+  const fl = document.getElementById('fLote').value, fs = document.getElementById('fStatus').value;
+  let list = D.rows.filter(r => {
+    if(fl === '__sem' ? r.line : (fl && (!r.line || r.line.lote.id !== fl))) return false;
+    if(fs === '__atr'){ if(!r.atrasado) return false; }
+    else if(fs === '__acar'){ if(!r.acar) return false; }
+    else if(fs === '__dif'){ if(!r.nomeDif) return false; }
+    else if(fs && r.st !== fs) return false;
+    if(q){
+      const hay = norm([r.line?.nome, r.line?.cidade, r.line?.bairro, r.code?.codigo, r.code?.dest, r.code?.nf].join(' '));
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  const LIMIT = 300, shown = list.slice(0, LIMIT);
+  let h = `<p class="sub">${fmtN(list.length)} volume(s)${list.length > LIMIT ? `, mostrando os primeiros ${LIMIT}. Use a busca ou os filtros para achar o resto.` : ''}</p>`;
+  if(!list.length){ document.getElementById('volTable').innerHTML = h; return; }
+  h += `<div class="tbl-wrap"><table><thead><tr><th>Destinatário</th><th>Lote</th><th>Cidade</th><th>Código</th><th>Status</th><th>Previsão</th><th>Descrição</th><th></th></tr></thead><tbody>`;
+  for(const r of shown){
+    const tags = [];
+    if(r.atrasado) tags.push('<span class="tag amber">previsão vencida</span>');
+    if(r.acar) tags.push(`<span class="tag wine">acareação ${esc(r.acar.status)}</span>`);
+    if(r.code && r.code.manual) tags.push('<span class="tag">ligado à mão</span>');
+    let act = '';
+    if(r.code && (r.st === 'ENTREGUE' || r.acar)) act = `<button class="linkish" data-acar="${esc(r.code.codigo)}">${r.acar ? 'Ver acareação' : 'Abrir acareação'}</button>`;
+    if(r.code && r.code.manual) act += `${act?'<br>':''}<button class="linkish" data-unlink="${esc(r.code.codigo)}">Desfazer ligação</button>`;
+    h += `<tr><td>${rowName(r)}</td><td>${loteName(r)}</td><td>${place(r)}</td><td class="code">${r.code ? esc(r.code.codigo) : '<span class="sub">—</span>'}</td>
+      <td>${pill(r.st)}<br>${tags.join('')}</td><td>${r.code ? esc(r.code.previsao) : ''}</td><td>${r.code ? esc(r.code.descricao) : ''}</td><td>${act}</td></tr>`;
+  }
+  document.getElementById('volTable').innerHTML = h + '</tbody></table></div>';
+}
+
+/* ---------- Acareações ---------- */
+function renderAcar(){
+  const el = document.getElementById('tab-acareacoes');
+  const list = D.rows.filter(r => r.acar);
+  const abertas = list.filter(r => r.acar.status !== 'resolvida').length;
+  const cnt = document.getElementById('cntAcar'); cnt.hidden = !abertas; cnt.textContent = abertas;
+  let h = `<h2>Acareações</h2><p class="lead">Quando a Jadlog marca como entregue, mas a garrafa chegou à pessoa errada ou não chegou. Para abrir, encontre o volume em <button class="linkish" data-goto="volumes">Todos os volumes</button> e clique em “Abrir acareação”. Enquanto estiver aberta, a entrega não conta na taxa de sucesso.</p>`;
+  if(!list.length){ el.innerHTML = h + '<p class="okline">Nenhuma acareação registrada.</p>'; return; }
+  h += `<div class="tbl-wrap"><table><thead><tr><th>Destinatário</th><th>Lote</th><th>Código</th><th>Situação</th><th>Aberta em</th><th>Anotações</th><th></th></tr></thead><tbody>`;
+  for(const r of list.sort((a,b) => (a.acar.status === 'resolvida') - (b.acar.status === 'resolvida'))){
+    h += `<tr><td>${rowName(r)}</td><td>${loteName(r)}</td><td class="code">${esc(r.code.codigo)}</td>
+      <td><span class="tag ${r.acar.status==='resolvida'?'':'wine'}">${esc(r.acar.status)}</span></td><td>${esc(r.acar.abertaEm)}</td>
+      <td style="max-width:360px">${esc(r.acar.nota)}</td><td><button class="linkish" data-acar="${esc(r.code.codigo)}">Editar</button></td></tr>`;
+  }
+  el.innerHTML = h + '</tbody></table></div>';
+}
+
+/* ---------- Importar dados ---------- */
+function renderDados(){
+  document.getElementById('loteList').innerHTML = state.lotes.map(l => `<li><span><strong>${esc(l.nome)}</strong> · ${l.linhas.length} volumes · enviado em ${isoToBR(l.dataEnvio)}<br><span class="sub">${esc(l.arquivo)}</span></span><button class="btn small danger" data-dellote="${l.id}">Remover</button></li>`).join('');
+  const reps = [...state.relatorios].sort((a,b) => b.dataRef.localeCompare(a.dataRef) || b.importadoEm - a.importadoEm);
+  document.getElementById('relList').innerHTML = reps.map(r => `<li><span><strong>${isoToBR(r.dataRef)}</strong> · ${r.itens.length} códigos<br><span class="sub">${esc(r.arquivo)}</span></span><button class="btn small danger" data-delrel="${r.id}">Remover</button></li>`).join('');
+  const ln = document.getElementById('loteNome');
+  if(!ln.value) ln.placeholder = 'Ex.: Lote ' + (state.lotes.length + 1);
+}
+function msg(id, text, ok){ const m = document.getElementById(id); m.className = 'msg ' + (ok ? 'ok' : 'err'); m.innerHTML = text; }
+function leaveDemo(){
+  if(!state.demo) return true;
+  if(!confirm('Os dados de exemplo serão apagados antes de importar os dados reais. Continuar?')) return false;
+  state = blank(); return true;
+}
+
+async function importLote(file){
+  try{
+    if(!leaveDemo()) return;
+    const rows = await readRows(file);
+    const linhas = parseLote(rows);
+    if(!linhas.length) throw new Error('O arquivo não tem nenhuma linha com nome de destinatário.');
+    if(state.lotes.some(l => l.arquivo === file.name) && !confirm(`Já existe um lote importado do arquivo “${file.name}”. Importar de novo como outro lote?`)) return;
+    const nomeIn = document.getElementById('loteNome');
+    const lote = {id:uid(), nome:nomeIn.value.trim() || 'Lote ' + (state.lotes.length + 1), dataEnvio:document.getElementById('loteData').value || todayISO(), arquivo:file.name, importadoEm:Date.now(), linhas};
+    // nomes que já saíram em lotes anteriores
+    const prev = new Set(); state.lotes.forEach(l => l.linhas.forEach(x => prev.add(norm(x.nome))));
+    const rep = [...new Set(linhas.map(x => norm(x.nome)).filter(n => prev.has(n)))];
+    const semCep = linhas.filter(x => x.cep.length !== 8).length;
+    state.lotes.push(lote); save(); nomeIn.value = '';
+    let t = `<strong>${esc(lote.nome)}</strong> importado: ${linhas.length} volume(s).`;
+    if(rep.length) t += `<br>${rep.length} nome(s) já aparecem em lotes anteriores. Confira se não é envio repetido: ${esc(rep.slice(0,5).join(', '))}${rep.length>5?'…':''}`;
+    if(semCep) t += `<br>${semCep} linha(s) com CEP fora de 8 dígitos.`;
+    msg('loteMsg', t, true);
+    rerender();
+  } catch(e){ msg('loteMsg', esc(e.message), false); }
+}
+function addReport(itens, arquivo){
+  if(!leaveDemo()) return false;
+  const dataRef = document.getElementById('relData').value || todayISO();
+  if(state.relatorios.some(r => r.arquivo === arquivo && r.dataRef === dataRef) && !confirm(`Já existe um relatório “${arquivo}” com a data ${isoToBR(dataRef)}. Importar de novo?`)) return false;
+  state.relatorios.push({id:uid(), dataRef, arquivo, importadoEm:Date.now(), itens});
+  save();
+  const c = {}; itens.forEach(i => { const s = normStatus(i.status); c[s] = (c[s]||0) + 1; });
+  const resumo = ORDER.filter(k => c[k]).map(k => `${STATUS[k].label.toLowerCase()} ${c[k]}`).join(', ');
+  rerender();
+  const sem = D.rows.filter(r => !r.line).length;
+  msg('relMsg', `Relatório de <strong>${isoToBR(dataRef)}</strong> importado: ${itens.length} código(s) (${esc(resumo)}).${sem ? `<br>${sem} código(s) não bateram com nenhum lote. Veja em Pendências.` : ''}`, true);
+  return true;
+}
+async function importReport(file){
+  try{ addReport(parseReport(await readRows(file)), file.name); }
+  catch(e){ msg('relMsg', esc(e.message), false); }
+}
+
+/* ---------- Exportar / backup ---------- */
+function download(name, blob){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+function exportConsolidado(){
+  if(!D.rows.length){ msg('bkMsg','Não há dados para exportar ainda.', false); return; }
+  const head = ['Lote','Enviado em','Destinatário (lote)','Endereço','Número','Complemento','Bairro','CEP','Cidade','UF','Código Jadlog','Nota fiscal','Destinatário (Jadlog)','Status','Status original','Dt emissão','Previsão','Previsão vencida','Descrição','Último relatório','Acareação','Anotações da acareação'];
+  const aoa = [head];
+  for(const r of D.rows){
+    const l = r.line || {}, c = r.code || {};
+    aoa.push([r.line ? l.lote.nome : '', r.line ? isoToBR(l.lote.dataEnvio) : '', l.nome||'', l.endereco||'', l.numero||'', l.complemento||'', l.bairro||'', l.cep||'', l.cidade||'', l.uf||'',
+      c.codigo||'', c.nf||'', c.dest||'', STATUS[r.st].label, c.status||'', c.emissao||'', c.previsao||'', r.atrasado?'sim':'', c.descricao||'', c.dataRef?isoToBR(c.dataRef):'',
+      r.acar ? r.acar.status : '', r.acar ? r.acar.nota : '']);
+  }
+  const fname = 'presente-ideal-2026-consolidado-' + todayISO();
+  if(typeof XLSX !== 'undefined'){
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = head.map((h,i) => ({wch: [2,10,12,18].includes(i) ? 32 : 16}));
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Volumes');
+    XLSX.writeFile(wb, fname + '.xlsx');
+  } else {
+    const csv = aoa.map(r => r.map(v => { const s = String(v); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; }).join(';')).join('\r\n');
+    download(fname + '.csv', new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'}));
+  }
+}
+
+/* ---------- Acareação (janela) ---------- */
+let dlgCode = null;
+function openAcar(cod){
+  const r = D.rows.find(x => x.code && x.code.codigo === cod); if(!r) return;
+  dlgCode = cod;
+  const a = state.acareacoes[cod];
+  document.getElementById('dlgTitle').textContent = a ? 'Acareação' : 'Abrir acareação';
+  document.getElementById('dlgInfo').textContent = `${r.line ? r.line.nome : r.code.dest} · código ${cod} · Jadlog: ${STATUS[r.st].label}${r.code.dest ? ' · nome na Jadlog: ' + r.code.dest : ''}`;
+  document.getElementById('dlgStatus').value = a ? a.status : 'aberta';
+  document.getElementById('dlgNota').value = a ? a.nota : '';
+  document.getElementById('dlgDel').hidden = !a;
+  const d = document.getElementById('dlg'); d.showModal ? d.showModal() : d.setAttribute('open','');
+}
+function closeDlg(){ const d = document.getElementById('dlg'); d.close ? d.close() : d.removeAttribute('open'); }
+
+/* ---------- Dados de exemplo (fictícios) ---------- */
+function loadDemo(){
+  const L = (nome,end,num,comp,bairro,cep,cidade,uf) => ({nome,endereco:end,numero:num,complemento:comp,bairro,cep,cidade,uf});
+  const linhas = [
+    L('Ana Ribeiro','Rua das Acácias','120','Apto 52','Jardim Exemplo','01000000','São Paulo','SP'),
+    L('Ana Ribeiro','Rua das Acácias','120','Apto 52','Jardim Exemplo','01000000','São Paulo','SP'),
+    L('Carlos Menezes','Rua das Acácias','120','Apto 52','Jardim Exemplo','01000000','São Paulo','SP'),
+    L('Beatriz Fontes','Av. Central','900','Sala 1203','Centro','20000000','Rio de Janeiro','RJ'),
+    L('Rafael Quintana','Av. Central','900','Sala 1203','Centro','20000000','Rio de Janeiro','RJ'),
+    L('Júlia Prado','Alameda dos Ipês','45','','Vila Modelo','80000000','Curitiba','PR'),
+    L('Marcos Lima','Rua Projetada','1500','Bloco B','Bairro Novo','30000000','Belo Horizonte','MG'),
+    L('Helena Sato','Travessa do Sol','12','','Centro','88000000','Florianópolis','SC'),
+    L('Otávio Reis','Rua do Porto','310','Casa 2','Ribeira','40000000','Salvador','BA')
+  ];
+  const d0 = new Date(); d0.setDate(d0.getDate() - 9);
+  const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  const br = d => toBR(d);
+  const plus = n => { const d = new Date(d0); d.setDate(d.getDate()+n); return d; };
+  state = blank(); state.demo = true;
+  state.lotes.push({id:'demo1', nome:'Lote 1', dataEnvio:iso(d0), arquivo:'exemplo_lote1.csv', importadoEm:Date.now(), linhas});
+  const I = (codigo,dest,status,prev,descricao='') => ({codigo, nf:'DEC-'+codigo.slice(-5), dest, status, emissao:br(d0), previsao:br(plus(prev)), descricao});
+  state.relatorios.push({id:'demoR1', dataRef:iso(plus(3)), arquivo:'exemplo_status_1.xlsx', importadoEm:Date.now()-2000, itens:[
+    I('90000000000001','ANA RIBEIRO','EM ROTA',3), I('90000000000002','ANA RIBEIRO','EM ROTA',3), I('90000000000003','CARLOS MENEZES','EM ROTA',3),
+    I('90000000000004','BEATRIZ FONTES','ENTRADA',4), I('90000000000005','RAFAEL QUINTANA','ENTRADA',4),
+    I('90000000000006','EXEMPLO SA - JULIA PRADO','TRANSFERIDO PARA UNIDADE',5), I('90000000000007','MARCOS LIMA','CUSTODIA',5,'ENDERECO INSUFICIENTE- AGUARDANDO COMPLEMENTOS'),
+    I('90000000000009','FERNANDA ALVES','ENTRADA',5)
+  ]});
+  state.relatorios.push({id:'demoR2', dataRef:iso(plus(7)), arquivo:'exemplo_status_2.xlsx', importadoEm:Date.now()-1000, itens:[
+    I('90000000000001','ANA RIBEIRO','ENTREGUE',3), I('90000000000002','ANA RIBEIRO','ENTREGUE',3), I('90000000000003','CARLOS MENEZES','ENTREGUE',3),
+    I('90000000000004','BEATRIZ FONTES','ENTREGUE',4), I('90000000000005','RAFAEL QUINTANA','EM DEVOLUCAO',4,'DESTINATARIO AUSENTE - 3 TENTATIVAS'),
+    I('90000000000006','EXEMPLO SA - JULIA PRADO','EM ROTA',5), I('90000000000007','MARCOS LIMA','CUSTODIA',5,'ENDERECO INSUFICIENTE- AGUARDANDO COMPLEMENTOS'),
+    I('90000000000008','HELENA SATO','ENTREGUE',4), I('90000000000009','FERNANDA ALVES','EM ROTA',5)
+  ]});
+  state.acareacoes['90000000000004'] = {status:'aberta', nota:'Exemplo: Jadlog marcou como entregue, mas a destinatária diz que não recebeu. Pedido o comprovante com nome de quem assinou.', abertaEm:br(plus(8))};
+  save(); rerender();
+}
+
+/* ================== Eventos ================== */
+function goTab(t){
+  document.querySelectorAll('nav.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
+  document.querySelectorAll('main > section').forEach(s => s.hidden = s.id !== 'tab-' + t);
+  window.scrollTo({top:0});
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('button,[data-goto]'); if(!b) return;
+  if(b.dataset.tab) return goTab(b.dataset.tab);
+  if(b.dataset.goto) return goTab(b.dataset.goto);
+  if(b.dataset.act === 'demo') return loadDemo();
+  if(b.dataset.act === 'clear-demo'){ state = blank(); save(); return rerender(); }
+  if(b.dataset.acar) return openAcar(b.dataset.acar);
+  if(b.dataset.unlink){ delete state.vinculos[b.dataset.unlink]; save(); return rerender(); }
+  if(b.dataset.link){
+    const sel = document.querySelector(`select[data-linksel="${CSS.escape(b.dataset.link)}"]`);
+    if(!sel || !sel.value) return;
+    state.vinculos[b.dataset.link] = sel.value; save(); return rerender();
+  }
+  if(b.dataset.dellote){
+    const l = state.lotes.find(x => x.id === b.dataset.dellote);
+    if(!confirm(`Remover “${l.nome}” (${l.linhas.length} volumes)? Os relatórios da Jadlog continuam guardados.`)) return;
+    state.lotes = state.lotes.filter(x => x.id !== l.id);
+    Object.keys(state.vinculos).forEach(k => { if(state.vinculos[k].startsWith(l.id + ':')) delete state.vinculos[k]; });
+    save(); return rerender();
+  }
+  if(b.dataset.delrel){
+    const r = state.relatorios.find(x => x.id === b.dataset.delrel);
+    if(!confirm(`Remover o relatório de ${isoToBR(r.dataRef)} (${r.itens.length} códigos)?`)) return;
+    state.relatorios = state.relatorios.filter(x => x.id !== r.id); save(); return rerender();
+  }
+});
+document.getElementById('loteFile').addEventListener('change', e => { const f = e.target.files[0]; if(f) importLote(f); e.target.value = ''; });
+document.getElementById('relFile').addEventListener('change', e => { const f = e.target.files[0]; if(f) importReport(f); e.target.value = ''; });
+document.getElementById('relPasteBtn').addEventListener('click', () => {
+  const ta = document.getElementById('relPaste');
+  if(!ta.value.trim()){ msg('relMsg','Cole a tabela no campo acima, com a linha de cabeçalho.', false); return; }
+  try{ if(addReport(parseReport(parseDelimited(ta.value)), 'tabela colada')) ta.value = ''; }
+  catch(e){ msg('relMsg', esc(e.message), false); }
+});
+['fBusca','fLote','fStatus'].forEach(id => document.getElementById(id).addEventListener('input', renderVol));
+document.getElementById('expXlsx').addEventListener('click', exportConsolidado);
+document.getElementById('expJson').addEventListener('click', () => {
+  download('presente-ideal-2026-backup-' + todayISO() + '.json', new Blob([JSON.stringify(state)], {type:'application/json'}));
+  msg('bkMsg','Backup baixado. Guarde em local seguro: ele tem nomes e endereços.', true);
+});
+document.getElementById('impJson').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if(!f) return;
+  try{
+    const s = JSON.parse(await f.text());
+    if(!Array.isArray(s.lotes) || !Array.isArray(s.relatorios)) throw new Error('Este arquivo não é um backup desta página.');
+    if(!confirm('Carregar o backup substitui os dados atuais deste navegador. Continuar?')) return;
+    state = Object.assign(blank(), s); save(); rerender();
+    msg('bkMsg', `Backup carregado: ${state.lotes.length} lote(s) e ${state.relatorios.length} relatório(s).`, true);
+  } catch(err){ msg('bkMsg', esc(err.message || 'Não consegui ler o backup.'), false); }
+});
+document.getElementById('wipe').addEventListener('click', () => {
+  if(!confirm('Apagar todos os lotes, relatórios, ligações e acareações deste navegador? Baixe um backup antes se quiser guardar.')) return;
+  state = blank(); save(); rerender(); msg('bkMsg','Todos os dados foram apagados deste navegador.', true);
+});
+document.getElementById('dlgCancel').addEventListener('click', closeDlg);
+document.getElementById('dlgSave').addEventListener('click', () => {
+  const prev = state.acareacoes[dlgCode];
+  state.acareacoes[dlgCode] = {status:document.getElementById('dlgStatus').value, nota:document.getElementById('dlgNota').value.trim(), abertaEm: prev ? prev.abertaEm : toBR(new Date())};
+  save(); closeDlg(); rerender();
+});
+document.getElementById('dlgDel').addEventListener('click', () => {
+  if(!confirm('Remover esta acareação?')) return;
+  delete state.acareacoes[dlgCode]; save(); closeDlg(); rerender();
+});
+
+document.getElementById('loteData').value = todayISO();
+document.getElementById('relData').value = todayISO();
+rerender();
+</script>
+</body>
+</html>
