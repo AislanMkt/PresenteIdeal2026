@@ -389,7 +389,8 @@ function parseLote(rows){
   const head = rows[h].map(c => String(c).trim().toLowerCase());
   const ix = k => head.indexOf(k);
   const col = {nome:ix('dest_nome'), endereco:ix('dest_endereco'), numero:ix('dest_numero'), complemento:ix('dest_complemento'),
-               bairro:ix('dest_bairro'), cep:ix('dest_cep'), cidade:ix('dest_cidade'), uf:ix('dest_uf')};
+               bairro:ix('dest_bairro'), cep:ix('dest_cep'), cidade:ix('dest_cidade'), uf:ix('dest_uf'),
+               telefone:head.findIndex(c => norm(c).includes('TELEFONE')), obs:head.findIndex(c => norm(c).includes('OBSERVA'))};
   col.publico = rows[h].findIndex(c => ['PUBLICO','TAG'].includes(norm(c)));
   const out = [];
   for(let r = h+1; r < rows.length; r++){
@@ -397,7 +398,7 @@ function parseLote(rows){
     if(!g('nome')) continue;
     let cep = g('cep').replace(/\D/g,'');
     if(typeof rows[r][col.cep] === 'number' && cep.length === 7) cep = '0' + cep; // Excel tira o zero inicial
-    out.push({publico:normPublico(g('publico')), nome:g('nome'), endereco:g('endereco'), numero:g('numero'), complemento:g('complemento'), bairro:g('bairro'), cep, cidade:g('cidade'), uf:g('uf').toUpperCase()});
+    out.push({publico:normPublico(g('publico')), nome:g('nome'), endereco:g('endereco'), numero:g('numero'), complemento:g('complemento'), bairro:g('bairro'), cep, cidade:g('cidade'), uf:g('uf').toUpperCase(), telefone:g('telefone'), obs:g('obs')});
   }
   return out;
 }
@@ -635,7 +636,7 @@ function evoSVG(evo){
 
 /* ---------- Pendências ---------- */
 function rowName(r){
-  if(r.line) return `<strong>${esc(r.line.pessoa)}</strong> <span class="tag pub">${PUBLICOS[r.pub]}</span>${r.line.empresa ? `<br><span class="sub">${esc(r.line.empresa)}</span>` : ''}${r.nomeDif ? `<br><span class="sub">Na Jadlog: ${esc(r.code.dest)}</span>` : ''}`;
+  if(r.line) return `<strong>${esc(r.line.pessoa)}</strong> <span class="tag pub">${PUBLICOS[r.pub]}</span>${r.line.empresa ? `<br><span class="sub">${esc(r.line.empresa)}</span>` : ''}${r.nomeDif ? `<br><span class="sub">Na Jadlog: ${esc(r.code.dest)}</span>` : ''}${r.line.obs ? `<br><span class="sub">Obs.: ${esc(r.line.obs)}</span>` : ''}`;
   return `<strong>${esc(r.code.dest || '(sem nome)')}</strong><br><span class="sub">não ligado a um lote</span>`;
 }
 const place = r => r.line ? `${esc(r.line.cidade)}${r.line.uf ? '/'+esc(r.line.uf) : ''}` : '—';
@@ -658,6 +659,7 @@ function renderPend(){
   cnt.hidden = !(cust.length + dev.length); cnt.textContent = cust.length + dev.length;
 
   const codeCol = ['Código', r => `<span class="code">${esc(r.code.codigo)}</span>`];
+  const telCol = ['Telefone', r => r.line && r.line.telefone ? esc(r.line.telefone) : '<span class="sub">—</span>'];
   const descCol = ['Descrição da Jadlog', r => esc(r.code.descricao) || '<span class="sub">—</span>'];
   const prevCol = ['Previsão', r => esc(r.code.previsao)];
   const block = (title, list, acao, cols) => `<section class="block"><div class="pend-h"><h2>${title}</h2><span class="n">${list.length}</span></div>
@@ -665,8 +667,8 @@ function renderPend(){
 
   let h = `<p class="lead">O que precisa de alguém da Atlas para andar. Quando o destinatário é cliente ou prospect, o contato com a pessoa passa pelo CSM ou vendedor responsável.</p>`;
   if(!rows.length){ el.innerHTML = h + '<p class="okline">Importe lotes e relatórios para ver as pendências.</p>'; return; }
-  h += block('Custódia: falta dado de endereço', cust, 'A Jadlog está com o volume parado esperando complemento. Ação: confirmar com o destinatário o endereço completo (número, complemento, bloco, sala) e repassar à Jadlog junto com o código.', [codeCol, descCol, ['Desde', r => esc(r.code.emissao)]]);
-  h += block('Em devolução', dev, 'O volume está voltando para a Atlas. Ação: confirmar o endereço com o destinatário e decidir entre reenvio e cancelamento. No reenvio, lembrar que bebida alcoólica pode exigir recebedor maior de idade.', [codeCol, descCol]);
+  h += block('Custódia: falta dado de endereço', cust, 'A Jadlog está com o volume parado esperando complemento. Ação: confirmar com o destinatário o endereço completo (número, complemento, bloco, sala) e repassar à Jadlog junto com o código.', [codeCol, telCol, descCol, ['Desde', r => esc(r.code.emissao)]]);
+  h += block('Em devolução', dev, 'O volume está voltando para a Atlas. Ação: confirmar o endereço com o destinatário e decidir entre reenvio e cancelamento. No reenvio, lembrar que bebida alcoólica pode exigir recebedor maior de idade.', [codeCol, telCol, descCol]);
   h += block('A caminho com previsão vencida', atr, 'Já passou da data prevista e ainda não foi entregue. Ação: pedir posição à Jadlog para estes códigos.', [codeCol, ['Status', r => pill(r.st)], prevCol, descCol]);
   h += block('Códigos da Jadlog sem lote', orf, 'O nome no relatório da Jadlog não bateu com nenhum nome dos lotes. Ação: escolha a linha certa do lote para ligar o código. Se o volume não for do Presente Ideal, pode ignorar.', [codeCol, ['Status', r => pill(r.st)], ['Ligar à linha do lote', linkSelect]]);
   h += `<section class="block"><div class="pend-h"><h2>Volumes sem rastreio ainda</h2><span class="n">${sem.length}</span></div>
@@ -704,7 +706,7 @@ function renderVol(){
     else if(fs === '__dif'){ if(!r.nomeDif) return false; }
     else if(fs && r.st !== fs) return false;
     if(q){
-      const hay = norm([PUBLICOS[r.pub], r.line?.nome, r.line?.cidade, r.line?.bairro, r.code?.codigo, r.code?.dest, r.code?.nf].join(' '));
+      const hay = norm([PUBLICOS[r.pub], r.line?.nome, r.line?.obs, r.line?.cidade, r.line?.bairro, r.code?.codigo, r.code?.dest, r.code?.nf].join(' '));
       if(!hay.includes(q)) return false;
     }
     return true;
@@ -811,18 +813,18 @@ async function importReport(file){
 function download(name, blob){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
 function exportConsolidado(){
   if(!D.rows.length){ msg('bkMsg','Não há dados para exportar ainda.', false); return; }
-  const head = ['Lote','Enviado em','Público','Destinatário','Empresa','Nome na etiqueta','Endereço','Número','Complemento','Bairro','CEP','Cidade','UF','Código Jadlog','Nota fiscal','Destinatário (Jadlog)','Status','Status original','Dt emissão','Previsão','Previsão vencida','Descrição','Último relatório','Acareação','Anotações da acareação'];
+  const head = ['Lote','Enviado em','Público','Destinatário','Empresa','Nome na etiqueta','Endereço','Número','Complemento','Bairro','CEP','Cidade','UF','Telefone','Observação de entrega','Código Jadlog','Nota fiscal','Destinatário (Jadlog)','Status','Status original','Dt emissão','Previsão','Previsão vencida','Descrição','Último relatório','Acareação','Anotações da acareação'];
   const aoa = [head];
   for(const r of D.rows){
     const l = r.line || {}, c = r.code || {};
-    aoa.push([r.line ? l.lote.nome : '', r.line ? isoToBR(l.lote.dataEnvio) : '', PUBLICOS[r.pub], l.pessoa||'', l.empresa||'', l.nome||'', l.endereco||'', l.numero||'', l.complemento||'', l.bairro||'', l.cep||'', l.cidade||'', l.uf||'',
+    aoa.push([r.line ? l.lote.nome : '', r.line ? isoToBR(l.lote.dataEnvio) : '', PUBLICOS[r.pub], l.pessoa||'', l.empresa||'', l.nome||'', l.endereco||'', l.numero||'', l.complemento||'', l.bairro||'', l.cep||'', l.cidade||'', l.uf||'', l.telefone||'', l.obs||'',
       c.codigo||'', c.nf||'', c.dest||'', STATUS[r.st].label, c.status||'', c.emissao||'', c.previsao||'', r.atrasado?'sim':'', c.descricao||'', c.dataRef?isoToBR(c.dataRef):'',
       r.acar ? r.acar.status : '', r.acar ? r.acar.nota : '']);
   }
   const fname = 'presente-ideal-2026-consolidado-' + todayISO();
   if(typeof XLSX !== 'undefined'){
     const ws = XLSX.utils.aoa_to_sheet(aoa);
-    ws['!cols'] = head.map((h,i) => ({wch: [3,4,5,6,15,21].includes(i) ? 30 : 16}));
+    ws['!cols'] = head.map((h,i) => ({wch: [3,4,5,6,14,17,23].includes(i) ? 30 : 16}));
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Volumes');
     XLSX.writeFile(wb, fname + '.xlsx');
   } else {
@@ -856,7 +858,7 @@ function loadDemo(){
     L('Beatriz Fontes - Grupo Horizonte','Av. Central','900','Sala 1203','Centro','20000000','Rio de Janeiro','RJ'),
     L('Rafael Quintana - Grupo Horizonte','Av. Central','900','Sala 1203','Centro','20000000','Rio de Janeiro','RJ'),
     L('Júlia Prado - Vila Nova Energia','Alameda dos Ipês','45','','Vila Modelo','80000000','Curitiba','PR'),
-    L('Marcos Lima - Conselho Atlas','Rua Projetada','1500','Bloco B','Bairro Novo','30000000','Belo Horizonte','MG'),
+    Object.assign(L('Marcos Lima - Conselho Atlas','Rua Projetada','1500','Bloco B','Bairro Novo','30000000','Belo Horizonte','MG'),{telefone:'31900000000',obs:'Portaria só recebe até 18h'}),
     L('Helena Sato - Atlas Governance','Travessa do Sol','12','','Centro','88000000','Florianópolis','SC'),
     L('Otávio Reis - Banco Litoral','Rua do Porto','310','Casa 2','Ribeira','40000000','Salvador','BA')
   ];
