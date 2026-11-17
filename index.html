@@ -80,6 +80,7 @@ td.code{font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-weight:600;font-size:13px}
 .tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 7px;border-radius:6px;background:var(--soft);color:var(--muted);margin:2px 4px 0 0;white-space:nowrap}
 .tag.wine{background:color-mix(in srgb,var(--wine) 16%,transparent);color:var(--wine)}
+.tag.pub{background:transparent;border:1px solid var(--line);color:var(--ink)}
 .tag.amber{background:color-mix(in srgb,var(--amber) 18%,transparent);color:var(--amber)}
 .sub{color:var(--muted);font-size:13px}
 .bar-mini{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--none);min-width:120px}
@@ -157,6 +158,7 @@ dialog::backdrop{background:rgba(10,20,18,.45)}
         <input type="search" id="fBusca" placeholder="Buscar nome, empresa, código, cidade" aria-label="Buscar">
         <select id="fLote" aria-label="Filtrar por lote"></select>
         <select id="fStatus" aria-label="Filtrar por status"></select>
+        <select id="fPublico" aria-label="Filtrar por público"></select>
       </div>
       <div id="volTable"></div>
     </section>
@@ -169,6 +171,17 @@ dialog::backdrop{background:rgba(10,20,18,.45)}
           <div class="row">
             <div class="field"><label class="f" for="loteNome">Nome do lote</label><input type="text" id="loteNome" placeholder="Ex.: Lote 1"></div>
             <div class="field"><label class="f" for="loteData">Data de envio</label><input type="date" id="loteData"></div>
+          </div>
+          <div class="field"><label class="f" for="lotePublico">Público deste lote</label>
+            <select id="lotePublico">
+              <option value="">Lote misto: ler da coluna “publico” do arquivo</option>
+              <option value="CLIENTE">Todos são clientes</option>
+              <option value="LEAD">Todos são leads</option>
+              <option value="CONSELHEIRO">Todos são conselheiros</option>
+              <option value="COLABORADOR">Todos são colaboradores</option>
+              <option value="INVESTIDOR">Todos são investidores</option>
+              <option value="SOCIO">Todos são sócios</option>
+            </select>
           </div>
           <label class="file">Escolha o arquivo do lote
             <input type="file" id="loteFile" accept=".csv,.txt,.xlsx,.xls">
@@ -238,9 +251,22 @@ const STATUS = {
 };
 const ORDER = ['ENTREGUE','EM ROTA','TRANSFERIDO','ENTRADA','CUSTODIA','EM DEVOLUCAO','OUTRO','SEM'];
 const TRANSITO = ['EM ROTA','TRANSFERIDO','ENTRADA','OUTRO'];
+const PUBLICOS = {CLIENTE:'Cliente', LEAD:'Lead', CONSELHEIRO:'Conselheiro', COLABORADOR:'Colaborador', INVESTIDOR:'Investidor', SOCIO:'Sócio', ND:'Sem público'};
+const PUB_ORDER = ['CLIENTE','LEAD','CONSELHEIRO','COLABORADOR','INVESTIDOR','SOCIO','ND'];
+function normPublico(v){
+  const n = String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+  if(!n.trim()) return '';
+  if(n.includes('CLIENT')) return 'CLIENTE';
+  if(n.includes('LEAD') || n.includes('PROSPECT')) return 'LEAD';
+  if(n.includes('CONSELH')) return 'CONSELHEIRO';
+  if(n.includes('COLABOR')) return 'COLABORADOR';
+  if(n.includes('INVEST')) return 'INVESTIDOR';
+  if(n.includes('SOCIO')) return 'SOCIO';
+  return 'ND';
+}
 
 /* ================== Estado ================== */
-function blank(){ return {lotes:[], relatorios:[], vinculos:{}, acareacoes:{}, demo:false}; }
+function blank(){ return {lotes:[], relatorios:[], vinculos:{}, acareacoes:{}, publicos:{}, demo:false}; }
 let storageOK = true;
 try { localStorage.setItem('__t','1'); localStorage.removeItem('__t'); } catch(e){ storageOK = false; }
 function load(){
@@ -364,13 +390,14 @@ function parseLote(rows){
   const ix = k => head.indexOf(k);
   const col = {nome:ix('dest_nome'), endereco:ix('dest_endereco'), numero:ix('dest_numero'), complemento:ix('dest_complemento'),
                bairro:ix('dest_bairro'), cep:ix('dest_cep'), cidade:ix('dest_cidade'), uf:ix('dest_uf')};
+  col.publico = rows[h].findIndex(c => ['PUBLICO','TAG'].includes(norm(c)));
   const out = [];
   for(let r = h+1; r < rows.length; r++){
     const g = k => col[k] >= 0 ? String(rows[r][col[k]] ?? '').trim() : '';
     if(!g('nome')) continue;
     let cep = g('cep').replace(/\D/g,'');
     if(typeof rows[r][col.cep] === 'number' && cep.length === 7) cep = '0' + cep; // Excel tira o zero inicial
-    out.push({nome:g('nome'), endereco:g('endereco'), numero:g('numero'), complemento:g('complemento'), bairro:g('bairro'), cep, cidade:g('cidade'), uf:g('uf').toUpperCase()});
+    out.push({publico:normPublico(g('publico')), nome:g('nome'), endereco:g('endereco'), numero:g('numero'), complemento:g('complemento'), bairro:g('bairro'), cep, cidade:g('cidade'), uf:g('uf').toUpperCase()});
   }
   return out;
 }
@@ -430,7 +457,7 @@ function compute(){
 
   // 2. Volumes dos lotes
   const lines = [];
-  for(const l of state.lotes) l.linhas.forEach((x,i) => lines.push(Object.assign({key:l.id+':'+i, lote:l, f:feat(x.nome), envDate:parseISO(l.dataEnvio)}, x, splitNome(x.nome))));
+  for(const l of state.lotes) l.linhas.forEach((x,i) => lines.push(Object.assign({key:l.id+':'+i, lote:l, f:feat(x.nome), envDate:parseISO(l.dataEnvio)}, x, splitNome(x.nome), {publico: state.publicos[l.id+':'+i] || x.publico || 'ND'})));
   const lineByKey = new Map(lines.map(x => [x.key, x]));
   const lineCode = new Map(), codeLine = new Map();
   const link = (c,l,s,manual) => { lineCode.set(l.key,c); codeLine.set(c.codigo,l); c.score = s; c.manual = !!manual; };
@@ -471,7 +498,7 @@ function compute(){
     const st = c ? c.st : 'SEM';
     const prev = c ? parseBR(c.previsao) : null;
     const acar = c ? state.acareacoes[c.codigo] || null : null;
-    return {line:l, code:c, st, atrasado: !!(c && st !== 'ENTREGUE' && prev && prev < today), acar,
+    return {line:l, code:c, st, pub: l ? l.publico : 'ND', atrasado: !!(c && st !== 'ENTREGUE' && prev && prev < today), acar,
             nomeDif: !!(c && l && c.score < 1)};
   };
   const rows = lines.map(l => mk(l, lineCode.get(l.key)));
@@ -552,6 +579,8 @@ function renderPainel(){
     <div class="kpi ${atrasados?'warn':''}"><div class="v">${fmtN(atrasados)}</div><div class="l">a caminho com previsão vencida</div></div>
   </div>`;
 
+  // Por público
+  h += `<section class="block"><h2>Por público</h2><p class="lead">Taxa de entrega de cada público.</p>${groupTable(rows, r => r.pub, PUB_ORDER, k => PUBLICOS[k], null)}</section>`;
   // Por lote
   const groups = new Map();
   for(const r of rows){ const k = r.line ? r.line.lote.id : '__sem'; if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(r); }
@@ -572,6 +601,18 @@ function renderPainel(){
   h += evo.length ? `<div class="panel chart">${evoSVG(evo)}</div>` : `<p class="okline">Importe o primeiro relatório de status da Jadlog para ver a evolução.</p>`;
   h += `</section>`;
   el.innerHTML = h;
+}
+function groupTable(rows, keyFn, order, labelFn, extraFn){
+  const groups = new Map();
+  rows.forEach(r => { const k = keyFn(r); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(r); });
+  let h = `<div class="tbl-wrap"><table><thead><tr><th>Público</th><th class="num">Volumes</th><th class="num">Entregues</th><th class="num">A caminho</th><th class="num">Custódia</th><th class="num">Devolução</th><th class="num">Sem rastreio</th><th class="num">% entregue</th><th>Distribuição</th></tr></thead><tbody>`;
+  for(const k of order.filter(k => groups.has(k))){
+    const g = groups.get(k), gc = countBy(g);
+    h += `<tr><td><strong>${esc(labelFn(k))}</strong></td><td class="num">${g.length}</td><td class="num">${gc.ENTREGUE}</td><td class="num">${TRANSITO.reduce((s,x)=>s+gc[x],0)}</td>
+      <td class="num">${gc.CUSTODIA||''}</td><td class="num">${gc['EM DEVOLUCAO']||''}</td><td class="num">${gc.SEM||''}</td>
+      <td class="num"><strong>${fmtPct(pct(gc.ENTREGUE,g.length))}</strong></td><td>${miniBar(gc,g.length)}</td></tr>`;
+  }
+  return h + `</tbody></table></div>`;
 }
 function evoSVG(evo){
   const bw = 46, gap = 34, top = 30, ch = 170, left = 10;
@@ -594,7 +635,7 @@ function evoSVG(evo){
 
 /* ---------- Pendências ---------- */
 function rowName(r){
-  if(r.line) return `<strong>${esc(r.line.pessoa)}</strong>${r.line.empresa ? `<br><span class="sub">${esc(r.line.empresa)}</span>` : ''}${r.nomeDif ? `<br><span class="sub">Na Jadlog: ${esc(r.code.dest)}</span>` : ''}`;
+  if(r.line) return `<strong>${esc(r.line.pessoa)}</strong> <span class="tag pub">${PUBLICOS[r.pub]}</span>${r.line.empresa ? `<br><span class="sub">${esc(r.line.empresa)}</span>` : ''}${r.nomeDif ? `<br><span class="sub">Na Jadlog: ${esc(r.code.dest)}</span>` : ''}`;
   return `<strong>${esc(r.code.dest || '(sem nome)')}</strong><br><span class="sub">não ligado a um lote</span>`;
 }
 const place = r => r.line ? `${esc(r.line.cidade)}${r.line.uf ? '/'+esc(r.line.uf) : ''}` : '—';
@@ -648,18 +689,22 @@ function renderVolFilters(){
   fl.innerHTML = `<option value="">Todos os lotes</option>${state.lotes.map(l => `<option value="${esc(l.id)}">${esc(l.nome)}</option>`).join('')}<option value="__sem">Sem lote identificado</option>`;
   fs.innerHTML = `<option value="">Todos os status</option>${ORDER.map(k => `<option value="${k}">${STATUS[k].label}</option>`).join('')}<option value="__atr">Previsão vencida</option><option value="__acar">Em acareação</option><option value="__dif">Nome diferente do lote</option>`;
   fl.value = vl; fs.value = vs;
+  const fp = document.getElementById('fPublico'), vp = fp.value;
+  fp.innerHTML = `<option value="">Todos os públicos</option>${PUB_ORDER.map(k => `<option value="${k}">${PUBLICOS[k]}</option>`).join('')}`;
+  fp.value = vp;
 }
 function renderVol(){
   const q = norm(document.getElementById('fBusca').value);
-  const fl = document.getElementById('fLote').value, fs = document.getElementById('fStatus').value;
+  const fl = document.getElementById('fLote').value, fs = document.getElementById('fStatus').value, fp = document.getElementById('fPublico').value;
   let list = D.rows.filter(r => {
     if(fl === '__sem' ? r.line : (fl && (!r.line || r.line.lote.id !== fl))) return false;
+    if(fp && r.pub !== fp) return false;
     if(fs === '__atr'){ if(!r.atrasado) return false; }
     else if(fs === '__acar'){ if(!r.acar) return false; }
     else if(fs === '__dif'){ if(!r.nomeDif) return false; }
     else if(fs && r.st !== fs) return false;
     if(q){
-      const hay = norm([r.line?.nome, r.line?.cidade, r.line?.bairro, r.code?.codigo, r.code?.dest, r.code?.nf].join(' '));
+      const hay = norm([PUBLICOS[r.pub], r.line?.nome, r.line?.cidade, r.line?.bairro, r.code?.codigo, r.code?.dest, r.code?.nf].join(' '));
       if(!hay.includes(q)) return false;
     }
     return true;
@@ -675,6 +720,7 @@ function renderVol(){
     if(r.code && r.code.manual) tags.push('<span class="tag">ligado à mão</span>');
     let act = '';
     if(r.code && (r.st === 'ENTREGUE' || r.acar)) act = `<button class="linkish" data-acar="${esc(r.code.codigo)}">${r.acar ? 'Ver acareação' : 'Abrir acareação'}</button>`;
+    if(r.line) act += `${act?'<br>':''}<select data-pub="${esc(r.line.key)}" aria-label="Mudar público" style="width:auto;padding:3px 6px;font-size:13px;margin-top:4px">${PUB_ORDER.map(k => `<option value="${k}"${k===r.pub?' selected':''}>${PUBLICOS[k]}</option>`).join('')}</select>`;
     if(r.code && r.code.manual) act += `${act?'<br>':''}<button class="linkish" data-unlink="${esc(r.code.codigo)}">Desfazer ligação</button>`;
     h += `<tr><td>${rowName(r)}</td><td>${loteName(r)}</td><td>${place(r)}</td><td class="code">${r.code ? esc(r.code.codigo) : '<span class="sub">—</span>'}</td>
       <td>${pill(r.st)}<br>${tags.join('')}</td><td>${r.code ? esc(r.code.previsao) : ''}</td><td>${r.code ? esc(r.code.descricao) : ''}</td><td>${act}</td></tr>`;
@@ -701,7 +747,8 @@ function renderAcar(){
 
 /* ---------- Importar dados ---------- */
 function renderDados(){
-  document.getElementById('loteList').innerHTML = state.lotes.map(l => `<li><span><strong>${esc(l.nome)}</strong> · ${l.linhas.length} volumes · enviado em ${isoToBR(l.dataEnvio)}<br><span class="sub">${esc(l.arquivo)}</span></span><button class="btn small danger" data-dellote="${l.id}">Remover</button></li>`).join('');
+  document.getElementById('loteList').innerHTML = state.lotes.map(l => { const pc = {}; l.linhas.forEach((x,i) => { const k = state.publicos[l.id+':'+i] || x.publico || 'ND'; pc[k] = (pc[k]||0)+1; });
+    return `<li><span><strong>${esc(l.nome)}</strong> · ${l.linhas.length} volumes · enviado em ${isoToBR(l.dataEnvio)}<br><span class="sub">${PUB_ORDER.filter(k => pc[k]).map(k => PUBLICOS[k]+' '+pc[k]).join(' · ')}</span><br><span class="sub">${esc(l.arquivo)}</span></span><button class="btn small danger" data-dellote="${l.id}">Remover</button></li>`; }).join('');
   const reps = [...state.relatorios].sort((a,b) => b.dataRef.localeCompare(a.dataRef) || b.importadoEm - a.importadoEm);
   document.getElementById('relList').innerHTML = reps.map(r => `<li><span><strong>${isoToBR(r.dataRef)}</strong> · ${r.itens.length} códigos<br><span class="sub">${esc(r.arquivo)}</span></span><button class="btn small danger" data-delrel="${r.id}">Remover</button></li>`).join('');
   const ln = document.getElementById('loteNome');
@@ -722,6 +769,9 @@ async function importLote(file){
     if(!linhas.length) throw new Error('O arquivo não tem nenhuma linha com nome de destinatário.');
     if(state.lotes.some(l => l.arquivo === file.name) && !confirm(`Já existe um lote importado do arquivo “${file.name}”. Importar de novo como outro lote?`)) return;
     const nomeIn = document.getElementById('loteNome');
+    const padrao = document.getElementById('lotePublico').value;
+    const temColuna = linhas.some(x => x.publico);
+    linhas.forEach(x => { if(!x.publico) x.publico = padrao || 'ND'; });
     const lote = {id:uid(), nome:nomeIn.value.trim() || 'Lote ' + (state.lotes.length + 1), dataEnvio:document.getElementById('loteData').value || todayISO(), arquivo:file.name, importadoEm:Date.now(), linhas};
     // nomes que já saíram em lotes anteriores
     const prev = new Set(); state.lotes.forEach(l => l.linhas.forEach(x => prev.add(norm(x.nome))));
@@ -732,6 +782,8 @@ async function importLote(file){
     let t = `<strong>${esc(lote.nome)}</strong> importado: ${linhas.length} volume(s).`;
     if(rep.length) t += `<br>${rep.length} nome(s) já aparecem em lotes anteriores. Confira se não é envio repetido: ${esc(rep.slice(0,5).join(', '))}${rep.length>5?'…':''}`;
     if(semCep) t += `<br>${semCep} linha(s) com CEP fora de 8 dígitos.`;
+    const semPub = linhas.filter(x => x.publico === 'ND').length;
+    if(semPub) t += `<br>${semPub} linha(s) sem público${!padrao && !temColuna ? ' (o arquivo não tem a coluna “publico” e o lote foi marcado como misto)' : ''}. Dá para ajustar em Todos os volumes.`;
     if(semEmp) t += `<br>${semEmp} linha(s) sem empresa no nome (regra: “Nome - Empresa”).`;
     msg('loteMsg', t, true);
     rerender();
@@ -759,18 +811,18 @@ async function importReport(file){
 function download(name, blob){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
 function exportConsolidado(){
   if(!D.rows.length){ msg('bkMsg','Não há dados para exportar ainda.', false); return; }
-  const head = ['Lote','Enviado em','Destinatário','Empresa','Nome na etiqueta','Endereço','Número','Complemento','Bairro','CEP','Cidade','UF','Código Jadlog','Nota fiscal','Destinatário (Jadlog)','Status','Status original','Dt emissão','Previsão','Previsão vencida','Descrição','Último relatório','Acareação','Anotações da acareação'];
+  const head = ['Lote','Enviado em','Público','Destinatário','Empresa','Nome na etiqueta','Endereço','Número','Complemento','Bairro','CEP','Cidade','UF','Código Jadlog','Nota fiscal','Destinatário (Jadlog)','Status','Status original','Dt emissão','Previsão','Previsão vencida','Descrição','Último relatório','Acareação','Anotações da acareação'];
   const aoa = [head];
   for(const r of D.rows){
     const l = r.line || {}, c = r.code || {};
-    aoa.push([r.line ? l.lote.nome : '', r.line ? isoToBR(l.lote.dataEnvio) : '', l.pessoa||'', l.empresa||'', l.nome||'', l.endereco||'', l.numero||'', l.complemento||'', l.bairro||'', l.cep||'', l.cidade||'', l.uf||'',
+    aoa.push([r.line ? l.lote.nome : '', r.line ? isoToBR(l.lote.dataEnvio) : '', PUBLICOS[r.pub], l.pessoa||'', l.empresa||'', l.nome||'', l.endereco||'', l.numero||'', l.complemento||'', l.bairro||'', l.cep||'', l.cidade||'', l.uf||'',
       c.codigo||'', c.nf||'', c.dest||'', STATUS[r.st].label, c.status||'', c.emissao||'', c.previsao||'', r.atrasado?'sim':'', c.descricao||'', c.dataRef?isoToBR(c.dataRef):'',
       r.acar ? r.acar.status : '', r.acar ? r.acar.nota : '']);
   }
   const fname = 'presente-ideal-2026-consolidado-' + todayISO();
   if(typeof XLSX !== 'undefined'){
     const ws = XLSX.utils.aoa_to_sheet(aoa);
-    ws['!cols'] = head.map((h,i) => ({wch: [2,3,4,5,14,20].includes(i) ? 30 : 16}));
+    ws['!cols'] = head.map((h,i) => ({wch: [3,4,5,6,15,21].includes(i) ? 30 : 16}));
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Volumes');
     XLSX.writeFile(wb, fname + '.xlsx');
   } else {
@@ -796,7 +848,7 @@ function closeDlg(){ const d = document.getElementById('dlg'); d.close ? d.close
 
 /* ---------- Dados de exemplo (fictícios) ---------- */
 function loadDemo(){
-  const L = (nome,end,num,comp,bairro,cep,cidade,uf) => ({nome,endereco:end,numero:num,complemento:comp,bairro,cep,cidade,uf});
+  const L = (nome,end,num,comp,bairro,cep,cidade,uf) => ({publico:{'Empresa Exemplo':'CLIENTE','Grupo Horizonte':'LEAD','Vila Nova Energia':'CLIENTE','Conselho Atlas':'CONSELHEIRO','Atlas Governance':'COLABORADOR','Banco Litoral':'INVESTIDOR'}[splitNome(nome).empresa]||'ND',nome,endereco:end,numero:num,complemento:comp,bairro,cep,cidade,uf});
   const linhas = [
     L('Ana Ribeiro - Empresa Exemplo','Rua das Acácias','120','Apto 52','Jardim Exemplo','01000000','São Paulo','SP'),
     L('Ana Ribeiro - Empresa Exemplo','Rua das Acácias','120','Apto 52','Jardim Exemplo','01000000','São Paulo','SP'),
@@ -855,6 +907,7 @@ document.addEventListener('click', e => {
     if(!confirm(`Remover “${l.nome}” (${l.linhas.length} volumes)? Os relatórios da Jadlog continuam guardados.`)) return;
     state.lotes = state.lotes.filter(x => x.id !== l.id);
     Object.keys(state.vinculos).forEach(k => { if(state.vinculos[k].startsWith(l.id + ':')) delete state.vinculos[k]; });
+    Object.keys(state.publicos).forEach(k => { if(k.startsWith(l.id + ':')) delete state.publicos[k]; });
     save(); return rerender();
   }
   if(b.dataset.delrel){
@@ -871,8 +924,12 @@ document.getElementById('relPasteBtn').addEventListener('click', () => {
   try{ if(addReport(parseReport(parseDelimited(ta.value)), 'tabela colada')) ta.value = ''; }
   catch(e){ msg('relMsg', esc(e.message), false); }
 });
-['fBusca','fLote','fStatus'].forEach(id => document.getElementById(id).addEventListener('input', renderVol));
+['fBusca','fLote','fStatus','fPublico'].forEach(id => document.getElementById(id).addEventListener('input', renderVol));
 document.getElementById('expXlsx').addEventListener('click', exportConsolidado);
+document.addEventListener('change', e => {
+  const sel = e.target.closest('select[data-pub]'); if(!sel) return;
+  state.publicos[sel.dataset.pub] = sel.value; save(); rerender();
+});
 document.getElementById('expJson').addEventListener('click', () => {
   download('presente-ideal-2026-backup-' + todayISO() + '.json', new Blob([JSON.stringify(state)], {type:'application/json'}));
   msg('bkMsg','Backup baixado. Guarde em local seguro: ele tem nomes e endereços.', true);
